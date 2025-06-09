@@ -21,10 +21,18 @@ class Game {
     }
   }
 
-  agregarEventos() {
-    window.addEventListener("keydown", (e) => this.personaje.mover(e));
-    this.checkColisiones();
-  }
+agregarEventos() {
+  window.addEventListener("keydown", (e) => this.personaje.mover(e));
+
+  window.addEventListener("keyup", (e) => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      this.personaje.element.classList.remove("animar-caminar");
+    }
+  });
+
+  this.checkColisiones();
+}
+
 
   checkColisiones() {
     setInterval(() => {
@@ -46,24 +54,42 @@ class Game {
 
 class Personaje {
   constructor() {
-    this.x = 50;
-    this.y = 300;
-    this.width = 50;
-    this.height = 50;
+    this.x = 100;
+    this.posicionInicialY = 630;
+    this.y = this.posicionInicialY;
+    this.width = 100;
+    this.height = 100;
     this.velocidad = 10;
     this.saltando = false;
+    this.direccion = 1; // 1 = derecha, -1 = izquierda
 
     this.element = document.createElement("div");
-    this.element.classList.add("personaje");
-
+    this.element.classList.add("personaje", "grande");
     this.actualizarPosicion();
   }
 
   mover(evento) {
     if (evento.key === "ArrowRight") {
       this.x += this.velocidad;
+
+      // Solo cambia dirección si es diferente
+      if (this.direccion !== 1) {
+        this.direccion = 1;
+        this.element.style.transform = "scale(2) scaleX(1)";
+      }
+
+      this.element.classList.add("animar-caminar");
+
     } else if (evento.key === "ArrowLeft") {
       this.x -= this.velocidad;
+
+      if (this.direccion !== -1) {
+        this.direccion = -1;
+        this.element.style.transform = "scale(2) scaleX(-1)";
+      }
+
+      this.element.classList.add("animar-caminar");
+
     } else if (evento.key === "ArrowUp" && !this.saltando) {
       this.saltar();
     }
@@ -77,7 +103,7 @@ class Personaje {
 
     const salto = setInterval(() => {
       if (this.y > alturaMaxima) {
-        this.y -= 20;
+        this.y -= 16;
       } else {
         clearInterval(salto);
         this.caer();
@@ -88,11 +114,12 @@ class Personaje {
 
   caer() {
     const gravedad = setInterval(() => {
-      if (this.y < 300) {
+      if (this.y < this.posicionInicialY) {
         this.y += 10;
       } else {
         clearInterval(gravedad);
         this.saltando = false;
+        this.y = this.posicionInicialY;
       }
       this.actualizarPosicion();
     }, 20);
@@ -112,6 +139,7 @@ class Personaje {
     );
   }
 }
+
 
 class Moneda {
   constructor() {
