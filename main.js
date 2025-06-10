@@ -1,7 +1,7 @@
 class Game {
   constructor() {
     this.container = document.getElementById("game-container");
-    this.puntosElement = document.getElementById("puntos");
+    // this.puntosElement = document.getElementById("puntos");
     this.personaje = null;
     this.monedas = [];
     this.puntuacion = 0;
@@ -26,12 +26,13 @@ agregarEventos() {
 
   window.addEventListener("keyup", (e) => {
     if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-      this.personaje.element.classList.remove("animar-caminar");
+      this.personaje.detenerAnimacion();
     }
   });
 
   this.checkColisiones();
 }
+
 
 
   checkColisiones() {
@@ -46,55 +47,66 @@ agregarEventos() {
     }, 100);
   }
 
-  actualizarPuntuacion(puntos) {
-    this.puntuacion += puntos;
-    this.puntosElement.textContent = `Puntos: ${this.puntuacion}`;
-  }
-}
+//   actualizarPuntuacion(puntos) {
+//     this.puntuacion += puntos;
+//     this.puntosElement.textContent = `Puntos: ${this.puntuacion}`;
+//   }
+ }
 
 class Personaje {
   constructor() {
     this.x = 100;
-    this.posicionInicialY = 630;
+    this.posicionInicialY = 450;
     this.y = this.posicionInicialY;
     this.width = 100;
     this.height = 100;
     this.velocidad = 10;
     this.saltando = false;
     this.direccion = 1; // 1 = derecha, -1 = izquierda
+    this.animando = false;
 
     this.element = document.createElement("div");
     this.element.classList.add("personaje", "grande");
     this.actualizarPosicion();
   }
 
-  mover(evento) {
-    if (evento.key === "ArrowRight") {
-      this.x += this.velocidad;
+ mover(evento) {
+  if (evento.key === "ArrowRight") {
+    this.x += this.velocidad;
 
-      // Solo cambia dirección si es diferente
-      if (this.direccion !== 1) {
-        this.direccion = 1;
-        this.element.style.transform = "scale(2) scaleX(1)";
-      }
-
-      this.element.classList.add("animar-caminar");
-
-    } else if (evento.key === "ArrowLeft") {
-      this.x -= this.velocidad;
-
-      if (this.direccion !== -1) {
-        this.direccion = -1;
-        this.element.style.transform = "scale(2) scaleX(-1)";
-      }
-
-      this.element.classList.add("animar-caminar");
-
-    } else if (evento.key === "ArrowUp" && !this.saltando) {
-      this.saltar();
+    if (this.direccion !== 1) {
+      this.direccion = 1;
+      this.element.style.transform = "scale(2) scaleX(1)";
     }
 
-    this.actualizarPosicion();
+    // Solo añadir la animación si no está activa
+    if (!this.element.classList.contains("animar-caminar")) {
+      this.element.classList.add("animar-caminar");
+    }
+
+  } else if (evento.key === "ArrowLeft") {
+    this.x -= this.velocidad;
+
+    if (this.direccion !== -1) {
+      this.direccion = -1;
+      this.element.style.transform = "scale(2) scaleX(-1)";
+    }
+
+    if (!this.element.classList.contains("animar-caminar")) {
+      this.element.classList.add("animar-caminar");
+    }
+
+  } else if (evento.key === "ArrowUp" && !this.saltando) {
+    this.saltar();
+  }
+
+  this.actualizarPosicion();
+}
+
+
+  detenerAnimacion() {
+    this.element.classList.remove("animar-caminar");
+    this.animando = false;
   }
 
   saltar() {

@@ -1,55 +1,75 @@
+:root {
+  --aspect-ratio: 1300 / 900; /* ancho / alto base */
+}
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  overflow: hidden;
   background-color: #b8b8b8;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
   flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+#puntos {
+  font-size: 1.2rem;
+  margin: 10px 0;
+  color: #333;
 }
 
 #game-container {
   position: relative;
-  width: 1300px;
-  height: 900px;
-  margin: 30px auto;
-  border: 10px solid #6d6d6d;
+  width: 100%;
+  max-width: 100vw;
+  aspect-ratio: 1300 / 900;
+  border: 8px solid #6d6d6d;
   background-image: url('./assets/castle.png');
   background-size: cover;
+  background-position: center;
+  border-radius: 20px;
   overflow: hidden;
-  border-radius: 30px;
+  touch-action: none; /* útil para evitar scroll en móviles al tocar */
 }
 
+/* Personaje */
 .personaje {
   position: absolute;
-  width: 128px;             /* ancho de 1 bloque */
-  height: 64px;             /* alto de 1 bloque */
+  width: 128px;
+  height: 64px;
   background-image: url('./assets/Run.png');
   background-repeat: no-repeat;
-  background-size: auto;    /* usa el tamaño real del sprite completo */
+  background-size: auto;  
+  background-position: 0 0;
+  will-change: transform, background-position;
   image-rendering: pixelated;
   transform-origin: bottom center;
+  transition: none; 
 }
-
-.animar-caminar {
-  animation: correr 0.6s steps(6) infinite; /* suponiendo 6 frames */
+  
+/* .animar-caminar {
+  animation-name: correr;
+  animation-duration: 0.6s;
+  animation-timing-function: steps(6);
+  animation-iteration-count: infinite;
 }
 
 @keyframes correr {
   from { background-position: 0 0; }
-  to { background-position: -768px 0; }      /* 6 × 128px */
-}
+  to { background-position: -768px 0; }
+} */
 
-/* Aumentar tamaño sin recortar */
 .personaje.grande {
   transform: scale(2);
 }
 
+.personaje.invulnerable {
+  opacity: 0.5;
+}
 
-
-
+/* Enemigos */
 .enemigo {
   position: absolute;
   width: 40px;
@@ -59,28 +79,39 @@ body {
   border: 3px solid #660000;
 }
 
- .moneda {
-        position: absolute;
-        width: 30px;
-        height: 30px;
-        background: radial-gradient(circle, gold, #ffa500);
-        border-radius: 50%;
-        border: 2px solid #ff8c00;
-        box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        animation: brillar 2s ease-in-out infinite alternate;
-      }
-
-      @keyframes brillar {
-        from { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-        to { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
-      }
-
-#puntos {
-  font-size: 20px;
-  text-align: center;
-  margin: 10px 0;
+/* Monedas */
+.moneda {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(circle, gold, #ffa500);
+  border-radius: 50%;
+  border: 2px solid #ff8c00;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  animation: brillar 2s ease-in-out infinite alternate;
 }
 
-.personaje.invulnerable {
-  opacity: 0.5;
+@keyframes brillar {
+  from { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+  to   { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+}
+
+/* Escalado responsivo */
+@media (max-width: 1300px) {
+  #game-container {
+    width: 95vw;
+  }
+}
+
+@media (max-height: 900px) {
+  #game-container {
+    height: 95vh;
+  }
+}
+
+/* Evitar problemas en móviles muy pequeños */
+@media (max-width: 600px) {
+  #puntos {
+    font-size: 1rem;
+  }
 }
