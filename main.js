@@ -562,17 +562,19 @@ actualizarEstado() {
     }
   }
 
-  morir() {
-    this.element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-    this.element.style.opacity = '0';
-    this.element.style.transform += ' rotate(90deg)';
+morir() {
+  this.estado = 'muerto'; // Evita que siga atacando o patrullando
+  this.iniciarAnimacionMuerte();
 
-    setTimeout(() => {
-      if (this.element.parentNode) {
-        this.element.parentNode.removeChild(this.element);
-      }
-    }, 500);
-  }
+  // Eliminar al enemigo tras la animación
+  setTimeout(() => {
+    if (this.element.parentNode) {
+      this.element.parentNode.removeChild(this.element);
+    }
+  }, 1000); // Ajusta el tiempo si la animación dura más o menos
+}
+
+
 
   actualizarPosicion() {
     this.element.style.left = `${this.x}px`;
@@ -621,6 +623,19 @@ actualizarEstado() {
     this.element.classList.remove("animar-atacar");
     this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Idle.png')";
   }
+
+  iniciarAnimacionMuerte() {
+  // Detener cualquier otra animación activa
+  this.element.classList.remove("animar-caminar", "animar-atacar");
+
+  // Cambiar sprite a Death.png
+  this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Death.png')";
+
+  // Activar animación de muerte si tienes un spritesheet animado
+  this.element.classList.add("animar-morir");
+}
+
+  
 }
 
 

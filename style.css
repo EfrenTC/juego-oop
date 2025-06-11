@@ -115,9 +115,6 @@ body {
 }
 
 
-
-
-
 .enemigo.patrullando {
   filter: brightness(1);
 }
@@ -143,12 +140,23 @@ body {
   75% { transform: translateX(2px); }
 }
 
-
-.enemigo.muriendo {
-  transition: opacity 0.5s ease, transform 0.5s ease;
-  opacity: 0;
-  transform: rotate(90deg);
+.animar-morir {
+  animation: animar-muerte 1.5s steps(6) forwards;
+  background-repeat: no-repeat;
+  background-size: 1536px 320px; /* 256px * 6 */
 }
+
+
+
+@keyframes animar-muerte {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -1536px 0; /* ejemplo: 256px * 6 frames */
+  }
+}
+
 
 
 /* Indicador de puntuación (opcional) */
