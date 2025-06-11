@@ -74,14 +74,95 @@ body {
 }
 
 /* Enemigos */
+/* Barra de vida del jugador */
+.barra-vida-container {
+  position: fixed;
+  top: 100px;
+  left: 9%;
+  width: 200px;
+  height: 20px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 2px solid #fff;
+  border-radius: 10px;
+  z-index: 1000;
+}
+
+.barra-vida {
+  height: 100%;
+  background-color: #4CAF50;
+  border-radius: 8px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+/* Efectos de daño para el personaje */
+.personaje.dañado {
+  filter: brightness(2) hue-rotate(0deg) !important;
+  animation: shake 0.15s ease-in-out;
+}
+
+/* Enemigos mejorados */
 .enemigo {
   position: absolute;
-  width: 40px;
-  height: 40px;
-  background-color: crimson;
-  border-radius: 50%;
-  border: 3px solid #660000;
+  width: 84px;
+  height: 97px;
+  background-image: url('./assets/enemy/Sprites/Idle.png');
+  background-repeat: no-repeat;
+  background-size: 672px 97px; /* 8 frames * 84px */
+  background-position: 0 0;
+  image-rendering: pixelated;
+  z-index: 2;
+  border: 1px solid red;
+  /* Quita transform scale para probar */
 }
+
+
+
+.enemigo.patrullando {
+  filter: brightness(1);
+}
+
+.enemigo.persiguiendo {
+  filter: brightness(1.1) saturate(1.2);
+}
+
+.enemigo.atacando {
+  filter: brightness(1.2) contrast(1.1);
+}
+
+
+.enemigo.dañado {
+  filter: brightness(2) hue-rotate(0deg) !important;
+  animation: shake 0.15s ease-in-out;
+}
+
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+
+.enemigo.muriendo {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  opacity: 0;
+  transform: rotate(90deg);
+}
+
+
+/* Indicador de puntuación (opcional) */
+.puntuacion {
+  position: fixed;
+  top: 50px;
+  left: 20px;
+  color: white;
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  z-index: 1000;
+}
+
 
 /* Monedas */
 .moneda {
