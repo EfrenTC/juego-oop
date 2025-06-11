@@ -1,18 +1,14 @@
-:root {
-  --aspect-ratio: 1300 / 900; /* ancho / alto base */
-}
-
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
   background-color: #b8b8b8;
+  font-family: Arial, sans-serif;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  justify-content: flex-start;
-  min-height: 100vh;
+  height: 100vh;
   overflow: hidden;
 }
+
 
 #puntos {
   font-size: 1.2rem;
@@ -20,46 +16,54 @@ body {
   color: #333;
 }
 
+
 #game-container {
   position: relative;
-  width: 100%;
-  max-width: 100vw;
-  aspect-ratio: 1300 / 900;
-  border: 8px solid #6d6d6d;
+  width: 95vw;
+  max-width: 1600px; /* más grande que antes */
+  aspect-ratio: 16 / 7; /* más estirado horizontalmente */
   background-image: url('./assets/castle.png');
   background-size: cover;
   background-position: center;
+  border: 8px solid #6d6d6d;
   border-radius: 20px;
   overflow: hidden;
-  touch-action: none; /* útil para evitar scroll en móviles al tocar */
+  touch-action: none;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
 }
-
 /* Personaje */
 .personaje {
   position: absolute;
   width: 128px;
   height: 64px;
-  background-image: url('./assets/Run.png');
+  background-image: url('./assets/Idle.png');
   background-repeat: no-repeat;
-  background-size: auto;  
+  background-size: auto;
   background-position: 0 0;
   will-change: transform, background-position;
   image-rendering: pixelated;
   transform-origin: bottom center;
-  transition: none; 
-}
-  
-/* .animar-caminar {
-  animation-name: correr;
-  animation-duration: 0.6s;
-  animation-timing-function: steps(6);
-  animation-iteration-count: infinite;
+  transition: none;
 }
 
-@keyframes correr {
+/* Animación caminar */
+/* @keyframes caminar {
   from { background-position: 0 0; }
-  to { background-position: -768px 0; }
+  to { background-position: -512px 0; } 
+}
+.animar-caminar {
+  animation: caminar 0.5s steps(4) infinite;
 } */
+
+/* Animación atacar */
+@keyframes atacar {
+  from { background-position: 0 0; }
+  to { background-position: -512px 0; } /* ajusta según el ancho total del sprite Attacks.png */
+}
+.animar-atacar {
+  animation: atacar 0.4s steps(4) forwards;
+}
+
 
 .personaje.grande {
   transform: scale(2);

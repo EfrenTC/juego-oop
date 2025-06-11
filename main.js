@@ -22,7 +22,13 @@ class Game {
   }
 
 agregarEventos() {
-  window.addEventListener("keydown", (e) => this.personaje.mover(e));
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "x" || e.key === "X") {
+      this.personaje.atacar();
+    } else {
+      this.personaje.mover(e);
+    }
+  });
 
   window.addEventListener("keyup", (e) => {
     if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
@@ -32,6 +38,7 @@ agregarEventos() {
 
   this.checkColisiones();
 }
+
 
 
 
@@ -56,63 +63,73 @@ agregarEventos() {
 class Personaje {
   constructor() {
     this.x = 100;
-    this.posicionInicialY = 450;
+    this.posicionInicialY = 590;
     this.y = this.posicionInicialY;
     this.width = 100;
     this.height = 100;
     this.velocidad = 10;
     this.saltando = false;
-    this.direccion = 1; // 1 = derecha, -1 = izquierda
+    this.direccion = 1;
     this.animando = false;
+    this.atacando = false;
+    this.moviendo = false;
 
     this.element = document.createElement("div");
     this.element.classList.add("personaje", "grande");
+
+    // ✅ Añadir personaje al DOM
+    document.body.appendChild(this.element);
+
     this.actualizarPosicion();
   }
 
- mover(evento) {
-  if (evento.key === "ArrowRight") {
-    this.x += this.velocidad;
+  mover(evento) {
+    if (this.atacando) return; // no mover mientras ataca
 
-    if (this.direccion !== 1) {
-      this.direccion = 1;
-      this.element.style.transform = "scale(2) scaleX(1)";
+    this.moviendo = true;
+
+    if (evento.key === "ArrowRight") {
+      this.x += this.velocidad;
+      if (this.direccion !== 1) {
+        this.direccion = 1;
+        this.element.style.transform = "scale(2) scaleX(1)";
+      }
+      this.iniciarAnimacionCaminar();
+
+    } else if (evento.key === "ArrowLeft") {
+      this.x -= this.velocidad;
+      if (this.direccion !== -1) {
+        this.direccion = -1;
+        this.element.style.transform = "scale(2) scaleX(-1)";
+      }
+      this.iniciarAnimacionCaminar();
+
+    } else if (evento.key === "ArrowUp" && !this.saltando) {
+      this.saltar();
     }
 
-    // Solo añadir la animación si no está activa
-    if (!this.element.classList.contains("animar-caminar")) {
-      this.element.classList.add("animar-caminar");
-    }
-
-  } else if (evento.key === "ArrowLeft") {
-    this.x -= this.velocidad;
-
-    if (this.direccion !== -1) {
-      this.direccion = -1;
-      this.element.style.transform = "scale(2) scaleX(-1)";
-    }
-
-    if (!this.element.classList.contains("animar-caminar")) {
-      this.element.classList.add("animar-caminar");
-    }
-
-  } else if (evento.key === "ArrowUp" && !this.saltando) {
-    this.saltar();
+    this.actualizarPosicion();
   }
 
-  this.actualizarPosicion();
-}
-
+  iniciarAnimacionCaminar() {
+    if (!this.element.classList.contains("animar-caminar")) {
+      this.element.style.backgroundImage = "url('./assets/Run.png')";
+      this.element.classList.add("animar-caminar");
+    }
+  }
 
   detenerAnimacion() {
+    this.moviendo = false;
     this.element.classList.remove("animar-caminar");
-    this.animando = false;
+    this.element.style.backgroundImage = "url('./assets/Idle.png')";
   }
 
   saltar() {
     this.saltando = true;
-    let alturaMaxima = this.y - 250;
+    this.element.classList.remove("animar-caminar");
+    this.element.style.backgroundImage = "url('./assets/Jump.png')";
 
+    let alturaMaxima = this.y - 250;
     const salto = setInterval(() => {
       if (this.y > alturaMaxima) {
         this.y -= 16;
@@ -132,9 +149,44 @@ class Personaje {
         clearInterval(gravedad);
         this.saltando = false;
         this.y = this.posicionInicialY;
+
+        // Regresar sprite
+        if (this.moviendo) {
+          this.element.style.backgroundImage = "url('./assets/Run.png')";
+          this.element.classList.add("animar-caminar");
+        } else {
+          this.element.style.backgroundImage = "url('./assets/Idle.png')";
+        }
       }
+
       this.actualizarPosicion();
     }, 20);
+  }
+
+  atacar() {
+    if (this.atacando || this.saltando) return;
+
+    this.atacando = true;
+    this.moviendo = false;
+
+    this.element.classList.remove("animar-caminar");
+    this.element.style.backgroundImage = "url('./assets/Attacks.png')";
+    this.element.classList.add("animar-atacar");
+
+    setTimeout(() => {
+      this.atacando = false;
+      this.element.classList.remove("animar-atacar");
+
+      // Volver a sprite adecuado
+      if (this.saltando) {
+        this.element.style.backgroundImage = "url('./assets/Jump.png')";
+      } else if (this.moviendo) {
+        this.element.style.backgroundImage = "url('./assets/Run.png')";
+        this.element.classList.add("animar-caminar");
+      } else {
+        this.element.style.backgroundImage = "url('./assets/Idle.png')";
+      }
+    }, 400); // ajusta a la duración del ataque
   }
 
   actualizarPosicion() {
@@ -151,6 +203,7 @@ class Personaje {
     );
   }
 }
+
 
 
 class Moneda {
