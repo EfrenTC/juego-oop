@@ -77,7 +77,7 @@ body {
 /* Barra de vida del jugador */
 .barra-vida-container {
   position: fixed;
-  top: 100px;
+  top: 200px;
   left: 9%;
   width: 200px;
   height: 20px;
@@ -103,17 +103,18 @@ body {
 /* Enemigos mejorados */
 .enemigo {
   position: absolute;
-  width: 84px;
-  height: 97px;
+  width: 256px;              /* Nueva dimensión más ancha */
+  height: 320px;             /* Nueva dimensión más alta */
   background-image: url('./assets/enemy/Sprites/Idle.png');
   background-repeat: no-repeat;
-  background-size: 672px 97px; /* 8 frames * 84px */
+  background-size: 2048px 320px; /* 8 frames * 256px */
   background-position: 0 0;
   image-rendering: pixelated;
   z-index: 2;
-  border: 1px solid red;
-  /* Quita transform scale para probar */
+  transform-origin: bottom center;
 }
+
+
 
 
 

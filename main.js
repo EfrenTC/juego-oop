@@ -54,13 +54,13 @@ class Game {
       this.container.appendChild(enemigo.element);
     });
   }
-  
+
   loopJuego() {
     // Actualizar enemigos
     this.enemigos.forEach((enemigo, index) => {
       if (enemigo.vida > 0) {
         enemigo.update();
-        
+
         // Verificar colisión con el jugador para daño
         if (enemigo.colisionaCon(this.personaje) && !this.personaje.invulnerable) {
           console.log("¡Enemigo toca al jugador!");
@@ -76,48 +76,50 @@ class Game {
     requestAnimationFrame(() => this.loopJuego());
   }
 
-  procesarAtaqueJugador() {
-    const rangoAtaque = 200; // Rango de ataque del jugador
-    
-    this.enemigos.forEach((enemigo, index) => {
-      // Calcular distancia al enemigo
-      const distanciaX = Math.abs(this.personaje.x - enemigo.x);
-      const distanciaY = Math.abs(this.personaje.y - enemigo.y);
-      
-      // Verificar si está en rango y en la dirección correcta
-      const enRangoX = distanciaX <= rangoAtaque;
-      const enRangoY = distanciaY <= 50; // Mismo nivel aproximado
-      
-      // Verificar dirección del ataque
-      const direccionCorrecta = 
-        (this.personaje.direccion === 1 && enemigo.x >= this.personaje.x) ||
-        (this.personaje.direccion === -1 && enemigo.x <= this.personaje.x);
+procesarAtaqueJugador() {
+  const personajeRect = this.personaje.element.getBoundingClientRect();
 
-      if (enRangoX && enRangoY && direccionCorrecta) {
-        enemigo.recibirDaño(this.personaje.dañoAtaque);
-        console.log(`¡Golpe exitoso! Enemigo recibe ${this.personaje.dañoAtaque} de daño. Vida enemigo: ${enemigo.vida}`);
-        
-        // Efecto de empuje al enemigo
-        const fuerzaEmpuje = 30;
-        if (this.personaje.direccion === 1) {
-          enemigo.x += fuerzaEmpuje;
-        } else {
-          enemigo.x -= fuerzaEmpuje;
-        }
-        
-        // Actualizar puntuación por golpear
-        this.actualizarPuntuacion(5);
-        
-        // Puntuación extra si el enemigo muere
-        if (enemigo.vida <= 0) {
-          this.actualizarPuntuacion(50);
-          console.log('¡Enemigo eliminado! +50 puntos');
-        }
+  this.enemigos.forEach((enemigo, index) => {
+    const enemigoRect = enemigo.element.getBoundingClientRect();
+
+    // Verificar colisión visual real (rectángulo contra rectángulo)
+    const colisiona = !(
+      personajeRect.right < enemigoRect.left ||
+      personajeRect.left > enemigoRect.right ||
+      personajeRect.bottom < enemigoRect.top ||
+      personajeRect.top > enemigoRect.bottom
+    );
+
+    // Verificar dirección del ataque
+    const direccionCorrecta =
+      (this.personaje.direccion === 1 && enemigoRect.left >= personajeRect.left) ||
+      (this.personaje.direccion === -1 && enemigoRect.left <= personajeRect.left);
+
+    if (colisiona && direccionCorrecta) {
+      enemigo.recibirDaño(this.personaje.dañoAtaque);
+      console.log(`¡Golpe exitoso! Enemigo recibe ${this.personaje.dañoAtaque} de daño. Vida enemigo: ${enemigo.vida}`);
+
+      // Efecto de empuje al enemigo
+      const fuerzaEmpuje = 30;
+      if (this.personaje.direccion === 1) {
+        enemigo.x += fuerzaEmpuje;
       } else {
-        console.log(`Ataque fallido - Rango: ${enRangoX}, Nivel: ${enRangoY}, Dirección: ${direccionCorrecta}`);
+        enemigo.x -= fuerzaEmpuje;
       }
-    });
-  }
+
+      this.actualizarPuntuacion(5);
+
+      if (enemigo.vida <= 0) {
+        this.actualizarPuntuacion(50);
+        console.log('¡Enemigo eliminado! +50 puntos');
+      }
+    } else {
+      console.log(`Ataque fallido - Colisión: ${colisiona}, Dirección: ${direccionCorrecta}`);
+    }
+  });
+}
+
+
 
   checkColisiones() {
     setInterval(() => {
@@ -127,7 +129,7 @@ class Game {
           this.container.removeChild(moneda.element);
           this.monedas.splice(index, 1);
           this.actualizarPuntuacion(10);
-          
+
           // Las monedas pueden curar al jugador
           this.personaje.curar(5);
         }
@@ -167,7 +169,7 @@ class Personaje {
     this.animando = false;
     this.atacando = false;
     this.moviendo = false;
-    
+
     // Sistema de vida y combate
     this.vida = 100;
     this.vidaMaxima = 100;
@@ -178,7 +180,6 @@ class Personaje {
     this.element = document.createElement("div");
     this.element.classList.add("personaje", "grande");
 
-    // ✅ Añadir personaje al DOM - CORREGIDO
     this.actualizarPosicion();
     this.crearBarraVida();
   }
@@ -187,20 +188,20 @@ class Personaje {
     // Crear contenedor de la barra de vida
     this.barraVidaContainer = document.createElement("div");
     this.barraVidaContainer.classList.add("barra-vida-container");
-    
+
     this.barraVida = document.createElement("div");
     this.barraVida.classList.add("barra-vida");
-    
+
     this.barraVidaContainer.appendChild(this.barraVida);
     document.body.appendChild(this.barraVidaContainer);
-    
+
     this.actualizarBarraVida();
   }
 
   actualizarBarraVida() {
     const porcentajeVida = (this.vida / this.vidaMaxima) * 100;
     this.barraVida.style.width = `${porcentajeVida}%`;
-    
+
     // Cambiar color según la vida
     if (porcentajeVida > 60) {
       this.barraVida.style.backgroundColor = '#4CAF50'; // Verde
@@ -260,7 +261,7 @@ class Personaje {
     let alturaMaxima = this.y - 250;
     const salto = setInterval(() => {
       if (this.y > alturaMaxima) {
-        this.y -= 16;
+        this.y -= 30;
       } else {
         clearInterval(salto);
         this.caer();
@@ -361,7 +362,7 @@ class Personaje {
   morir() {
     console.log('¡Game Over!');
     this.element.style.filter = 'grayscale(1) brightness(0.5)';
-    
+
     // Aquí puedes agregar lógica de game over
     setTimeout(() => {
       alert('¡Has muerto! Reiniciando...');
@@ -398,27 +399,27 @@ class Personaje {
 class Enemigo {
   constructor(x, y, jugador) {
     this.x = x;
-    this.y = (typeof y === 'number') ? y : 330; // admite 0 si lo pasas explicitamente
+    this.width = 256;  // Nueva anchura
+    this.height = 320; // Nueva altura
 
-   this.width = 84;
-this.height = 97;
-
-
-    this.velocidad      = 0.3;
-    this.direccion      = -1;
-    this.jugador        = jugador;
-    this.estado         = 'patrullando';
+    // Suponemos que "y" es la posición del suelo (la base) y añadimos un offset para bajarlo 20px más.
+    this.y = (typeof y === 'number') ? (y - this.height + 150) : 100;
+    
+    this.velocidad = 0.3;
+    this.direccion = -1;
+    this.jugador = jugador;
+    this.estado = 'patrullando';
     this.rangoDeteccion = 150;
-    this.rangoAtaque    = 200;
-    this.vida           = 100;
-    this.dañoAtaque     = 15;
+    this.rangoAtaque = 100;
+    this.vida = 100;
+    this.dañoAtaque = 15;
     this.tiempoUltimoAtaque = 0;
-    this.cooldownAtaque     = 2000;
+    this.cooldownAtaque = 2000;
 
-    this.puntoInicialX   = x;
+    this.puntoInicialX = x;
     this.rangoPatrullaje = 100;
     this.limiteIzquierdo = Math.max(0, x - this.rangoPatrullaje / 2);
-    this.limiteDerecho   = Math.min(window.innerWidth - this.width, x + this.rangoPatrullaje / 2);
+    this.limiteDerecho = Math.min(window.innerWidth - this.width, x + this.rangoPatrullaje / 2);
 
     this.element = document.createElement("div");
     this.element.classList.add("enemigo");
@@ -427,7 +428,15 @@ this.height = 97;
     this.actualizarPosicion();
     this.element.style.transform = `scaleX(${this.direccion})`;
 
+    // Estado para controlar animaciones
+    this.atacando = false;
   }
+
+  actualizarPosicion() {
+    this.element.style.left = `${this.x}px`;
+    this.element.style.top = `${this.y}px`;
+  }
+  
 
   update() {
     this.actualizarEstado();
@@ -436,18 +445,18 @@ this.height = 97;
     this.actualizarPosicion();
   }
 
-  actualizarEstado() {
-    const distanciaAlJugador = Math.abs(this.x - this.jugador.x);
-    const jugadorEnRangoY = Math.abs(this.y - this.jugador.y) < 100; // Mismo nivel aproximado
-    
-    if (jugadorEnRangoY && distanciaAlJugador <= this.rangoAtaque) {
-      this.estado = 'atacando';
-    } else if (jugadorEnRangoY && distanciaAlJugador <= this.rangoDeteccion) {
-      this.estado = 'persiguiendo';
-    } else {
-      this.estado = 'patrullando';
-    }
+actualizarEstado() {
+  const distanciaAlJugador = Math.abs(this.x - this.jugador.x);
+
+  if (distanciaAlJugador <= this.rangoAtaque) {
+    this.estado = 'atacando';
+  } else if (distanciaAlJugador <= this.rangoDeteccion) {
+    this.estado = 'persiguiendo';
+  } else {
+    this.estado = 'patrullando';
   }
+}
+
 
   mover() {
     switch (this.estado) {
@@ -464,7 +473,10 @@ this.height = 97;
   }
 
   patrullar() {
+    if (this.atacando) return; // No se mueve si está atacando
+
     this.x += this.velocidad * this.direccion;
+    this.iniciarAnimacionCaminar();
 
     // Cambiar dirección en los límites de patrullaje
     if (this.x <= this.limiteIzquierdo || this.x >= this.limiteDerecho) {
@@ -474,8 +486,10 @@ this.height = 97;
   }
 
   perseguir() {
-    const velocidadPersecucion = this.velocidad * 1.8; // Más lenta la persecución
-    
+    if (this.atacando) return; // No se mueve si está atacando
+
+    const velocidadPersecucion = this.velocidad * 1.8;
+
     if (this.x < this.jugador.x) {
       this.x += velocidadPersecucion;
       if (this.direccion !== 1) {
@@ -489,16 +503,28 @@ this.height = 97;
         this.element.style.transform = `scaleX(${this.direccion})`;
       }
     }
+
+    this.iniciarAnimacionCaminar();
   }
 
   atacar() {
+    if (this.atacando) return; // No puede atacar mientras ataca
+
     const tiempoActual = Date.now();
-    
+
     if (tiempoActual - this.tiempoUltimoAtaque >= this.cooldownAtaque) {
+      this.atacando = true;
+      this.detenerAnimacionCaminar();
+      this.iniciarAnimacionAtacar();
       this.realizarAtaque();
       this.tiempoUltimoAtaque = tiempoActual;
+
+      setTimeout(() => {
+        this.atacando = false;
+        this.detenerAnimacionAtacar();
+      }, 400); // duración del ataque en ms
     }
-    
+
     // Orientarse hacia el jugador
     const direccionAlJugador = this.x < this.jugador.x ? 1 : -1;
     if (this.direccion !== direccionAlJugador) {
@@ -513,7 +539,7 @@ this.height = 97;
     setTimeout(() => {
       this.element.style.filter = 'brightness(1)';
     }, 200);
-    
+
     // Infligir daño al jugador si está en rango
     const distancia = Math.abs(this.x - this.jugador.x);
     if (distancia <= this.rangoAtaque) {
@@ -522,9 +548,39 @@ this.height = 97;
     }
   }
 
+  recibirDaño(cantidad) {
+    this.vida -= cantidad;
+
+    // Efecto visual de daño
+    this.element.style.filter = 'brightness(2) hue-rotate(0deg)';
+    setTimeout(() => {
+      this.element.style.filter = 'brightness(1)';
+    }, 150);
+
+    if (this.vida <= 0) {
+      this.morir();
+    }
+  }
+
+  morir() {
+    this.element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    this.element.style.opacity = '0';
+    this.element.style.transform += ' rotate(90deg)';
+
+    setTimeout(() => {
+      if (this.element.parentNode) {
+        this.element.parentNode.removeChild(this.element);
+      }
+    }, 500);
+  }
+
+  actualizarPosicion() {
+    this.element.style.left = `${this.x}px`;
+    this.element.style.top = `${this.y}px`;
+  }
+
   verificarColisiones() {
     if (this.colisionaCon(this.jugador)) {
-      // Empujar al jugador ligeramente
       const fuerzaEmpuje = 5;
       if (this.x < this.jugador.x) {
         this.jugador.x += fuerzaEmpuje;
@@ -543,38 +599,30 @@ this.height = 97;
     );
   }
 
-  recibirDaño(cantidad) {
-    this.vida -= cantidad;
-    
-    // Efecto visual de daño
-    this.element.style.filter = 'brightness(2) hue-rotate(0deg)';
-    setTimeout(() => {
-      this.element.style.filter = 'brightness(1)';
-    }, 150);
-    
-    if (this.vida <= 0) {
-      this.morir();
+  // Animaciones y sprites
+  iniciarAnimacionCaminar() {
+    if (!this.element.classList.contains("animar-caminar")) {
+      this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Run.png')";
+      this.element.classList.add("animar-caminar");
     }
   }
 
-  morir() {
-    // Efecto de muerte
-    this.element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-    this.element.style.opacity = '0';
-    this.element.style.transform += ' rotate(90deg)';
-    
-    setTimeout(() => {
-      if (this.element.parentNode) {
-        this.element.parentNode.removeChild(this.element);
-      }
-    }, 500);
+  detenerAnimacionCaminar() {
+    this.element.classList.remove("animar-caminar");
+    this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Idle.png')";
   }
 
-  actualizarPosicion() {
-    this.element.style.left = `${this.x}px`;
-    this.element.style.top = `${this.y}px`;
+  iniciarAnimacionAtacar() {
+    this.element.classList.add("animar-atacar");
+    this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Attack1.png')";
+  }
+
+  detenerAnimacionAtacar() {
+    this.element.classList.remove("animar-atacar");
+    this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Idle.png')";
   }
 }
+
 
 
 
