@@ -81,22 +81,34 @@ verificarCambioNivel() {
     this.personaje.y = sueloActual;
     this.personaje.posicionInicialY = sueloActual; // ⬅️ Esta línea es CRUCIAL
     this.personaje.actualizarPosicion();
+    this.crearEnemigos(); 
 
     console.log(`Nivel cambiado a ${this.nivelActual}`);
   }
 }
-  
+
 
 crearEnemigos() {
   const sueloY = this.niveles[this.nivelActual].sueloY;
 
-  const enemigo1 = new Enemigo(600, sueloY, this.personaje);
-  const enemigo2 = new Enemigo(1000, sueloY, this.personaje);
-  this.enemigos.push(enemigo1, enemigo2);
+  // Limpia enemigos anteriores
+  this.enemigos.forEach((enemigo) => enemigo.element.remove());
+  this.enemigos = [];
 
-  this.enemigos.forEach((enemigo) => {
+    if (this.nivelActual >= 5) {
+    console.log("Último nivel, no se crean enemigos.");
+    return; // Sale sin crear enemigos
+  } 
+
+  const cantidadEnemigos = 1 + this.nivelActual;
+
+  for (let i = 0; i < cantidadEnemigos; i++) {
+    const x = 300 + i * 150 + Math.random() * 50; // Distribución horizontal
+    const enemigo = new Enemigo(x, sueloY, this.personaje, this.nivelActual);
+    this.enemigos.push(enemigo);
     this.container.appendChild(enemigo.element);
-  });
+  }
+  console.log("Total enemigos en este nivel:", this.enemigos.length);
 }
 
 
@@ -441,7 +453,7 @@ class Enemigo {
     this.tiempoUltimoAtaque = 0;
     this.cooldownAtaque = 2000;
 
-    this.puntoInicialX = x;
+    this.puntoInicialX = x; 
     this.rangoPatrullaje = 100;
     this.limiteIzquierdo = Math.max(0, x - this.rangoPatrullaje / 2);
     this.limiteDerecho = Math.min(window.innerWidth - this.width, x + this.rangoPatrullaje / 2);
