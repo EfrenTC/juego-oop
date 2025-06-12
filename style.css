@@ -22,10 +22,10 @@ body {
   width: 95vw;
   max-width: 1600px; /* más grande que antes */
   aspect-ratio: 16 / 7; /* más estirado horizontalmente */
-  background-image: url('./assets/castle.png');
+  background-image: url('./assets/backgrounds/Background1.png');
   background-size: cover;
   background-position: center;
-  border: 8px solid #6d6d6d;
+  border: 8px solid #6d6d6d;  
   border-radius: 20px;
   overflow: hidden;
   touch-action: none;

@@ -4,3 +4,6 @@ Añadir mas escenarios
 Sistema puntuacion
 Cada pantalla los enemigos te quitan mas vida
 O si no que como no te puedes curar, y pasar pantallas hasta morir, record de nivel mas lejano (cada vez que se pasa de pantalla los enemigos tienen mas vida y pegan mas)
+
+suelos, olvidar escaleras, recortar escaleras
+al caer vuelve al y dl primer nivel
