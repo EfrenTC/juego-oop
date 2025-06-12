@@ -158,6 +158,20 @@ body {
 }
 
 
+.boss {
+  position: absolute;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  width: 512px;
+  height: 640px;
+  transition: filter 0.3s;
+  image-rendering: pixelated;
+  transform-origin: center bottom; /* Importante para que gire desde el centro-abajo */
+}
+
+
+
 
 /* Indicador de puntuación (opcional) */
 .puntuacion {

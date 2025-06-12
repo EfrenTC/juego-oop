@@ -95,11 +95,23 @@ crearEnemigos() {
   this.enemigos.forEach((enemigo) => enemigo.element.remove());
   this.enemigos = [];
 
-    if (this.nivelActual >= 5) {
-    console.log("Último nivel, no se crean enemigos.");
-    return; // Sale sin crear enemigos
-  } 
+  if (this.nivelActual === 5) {
+    // Crear boss directamente al cargar el nivel
+    const bossX = window.innerWidth / 2 - 250; // Ajusta según ancho del boss
+    const boss = new Boss(bossX, sueloY, this.personaje);
 
+    this.enemigos.push(boss);
+    this.container.appendChild(boss.element);
+
+    console.log("Boss creado en nivel 5");
+    console.log(`Posición del boss: x=${boss.x}, y=${boss.y}`);
+    console.log(`Tamaño del boss: width=${boss.width}, height=${boss.height}`);
+    console.log(`SueloY del nivel: ${sueloY}`);
+
+    return; // Importante: evita que cree enemigos normales en nivel 5
+  }
+
+  // Para los demás niveles, generar enemigos normales
   const cantidadEnemigos = 1 + this.nivelActual;
 
   for (let i = 0; i < cantidadEnemigos; i++) {
@@ -108,8 +120,10 @@ crearEnemigos() {
     this.enemigos.push(enemigo);
     this.container.appendChild(enemigo.element);
   }
+
   console.log("Total enemigos en este nivel:", this.enemigos.length);
 }
+
 
 
   loopJuego() {
@@ -127,39 +141,43 @@ crearEnemigos() {
     requestAnimationFrame(() => this.loopJuego());
   }
 
-  procesarAtaqueJugador() {
-    const personajeRect = this.personaje.element.getBoundingClientRect();
+ procesarAtaqueJugador() {
+  const personajeRect = this.personaje.element.getBoundingClientRect();
 
-    this.enemigos.forEach((enemigo, index) => {
-      const enemigoRect = enemigo.element.getBoundingClientRect();
+  this.enemigos.forEach((enemigo, index) => {
+    const enemigoRect = enemigo.element.getBoundingClientRect();
 
-      const colisiona = !(
-        personajeRect.right < enemigoRect.left ||
-        personajeRect.left > enemigoRect.right ||
-        personajeRect.bottom < enemigoRect.top ||
-        personajeRect.top > enemigoRect.bottom
-      );
+    const colisiona = !(
+      personajeRect.right < enemigoRect.left ||
+      personajeRect.left > enemigoRect.right ||
+      personajeRect.bottom < enemigoRect.top ||
+      personajeRect.top > enemigoRect.bottom
+    );
 
-      const direccionCorrecta =
-        (this.personaje.direccion === 1 && enemigoRect.left >= personajeRect.left) ||
-        (this.personaje.direccion === -1 && enemigoRect.left <= personajeRect.left);
+    const direccionCorrecta =
+      (this.personaje.direccion === 1 && enemigoRect.left >= personajeRect.left) ||
+      (this.personaje.direccion === -1 && enemigoRect.left <= personajeRect.left);
 
-      if (colisiona && direccionCorrecta) {
-        enemigo.recibirDaño(this.personaje.dañoAtaque);
-        console.log(`¡Golpe exitoso! Vida enemigo: ${enemigo.vida}`);
+    if (colisiona && direccionCorrecta) {
+      enemigo.recibirDaño(this.personaje.dañoAtaque);
+      console.log(`¡Golpe exitoso! Vida enemigo: ${enemigo.vida}`);
 
-        const fuerzaEmpuje = 30;
+      const fuerzaEmpuje = 30;
+
+      // Evitar empujar al boss
+      if (!(enemigo instanceof Boss)) {
         enemigo.x += this.personaje.direccion * fuerzaEmpuje;
-
-        this.actualizarPuntuacion(5);
-
-        if (enemigo.vida <= 0) {
-          this.actualizarPuntuacion(50);
-          console.log('¡Enemigo eliminado! +50 puntos');
-        }
       }
-    });
-  }
+
+      this.actualizarPuntuacion(5);
+
+      if (enemigo.vida <= 0) {
+        this.actualizarPuntuacion(50);
+        console.log('¡Enemigo eliminado! +50 puntos');
+      }
+    }
+  });
+}
 
   checkColisiones() {
     setInterval(() => {
@@ -198,7 +216,7 @@ class Personaje {
     this.y = this.posicionInicialY;
     this.width = 100;
     this.height = 100;
-    this.velocidad = 10;
+    this.velocidad = 40;
     this.saltando = false;
     this.direccion = 1;
     this.animando = false;
@@ -674,6 +692,132 @@ class Enemigo {
 
 
 }
+
+class Boss extends Enemigo {
+  constructor(x, y, jugador) {
+    super(x, y, jugador);
+    
+    this.width = 500;   // Reducido de 512
+    this.height = 700;  // Reducido de 640 para que quepa mejor
+    
+    this.vida = 1000;
+    this.dañoAtaque = 5;
+    this.velocidad = 0;
+    this.rangoDeteccion = 0;
+    this.rangoAtaque = 150;
+    this.cooldownAtaque = 2000; // 2 segundos de cooldown
+    this.tiempoUltimoAtaque = 0;
+    
+    // Ajustes de estilo
+    this.element.style.width = `${this.width}px`;
+    this.element.style.height = `${this.height}px`;
+    this.element.style.backgroundPosition = "bottom center";
+    this.element.style.backgroundSize = "contain";
+    this.element.style.backgroundRepeat = "no-repeat";
+
+    if (typeof y === 'number') {
+      this.y = y - this.height + 70; 
+      if (this.y < 0) this.y = 20;
+    } else {
+      this.y = Math.max(20, window.innerHeight - this.height - 50);
+    }
+    this.actualizarPosicion();
+    
+    this.element.classList.remove('enemigo');
+    this.element.classList.add('boss');
+    
+    const timestamp = new Date().getTime();
+    this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Idle/Bringer-of-Death_Idle_1.1.png?${timestamp}')`;
+    
+    this.atacando = false;
+
+    console.log(`Boss posicionado en: x=${this.x}, y=${this.y}, sueloY=${y}`);
+    console.log(`Boss ocupa desde Y=${this.y} hasta Y=${this.y + this.height}`);
+  } 
+  
+  verificarColision(jugador) {
+    const jugadorRect = {
+      x: jugador.x,
+      y: jugador.y,
+      width: jugador.width || 64,
+      height: jugador.height || 64
+    };
+    
+    const bossRect = {
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height
+    };
+    
+    return jugadorRect.x < bossRect.x + bossRect.width &&
+           jugadorRect.x + jugadorRect.width > bossRect.x &&
+           jugadorRect.y < bossRect.y + bossRect.height &&
+           jugadorRect.y + jugadorRect.height > bossRect.y;
+  }
+
+  actualizar() {
+    if (this.estado === 'muerto') return;
+
+    if (this.verificarColision(this.jugador)) {
+      this.atacar();
+    }
+  }
+  
+  atacar() {
+    if (this.atacando) return;
+
+    const tiempoActual = Date.now();
+    if (tiempoActual - this.tiempoUltimoAtaque >= this.cooldownAtaque) {
+      this.atacando = true;
+      this.tiempoUltimoAtaque = tiempoActual;
+
+      let frame = 1;
+      const totalFrames = 10;
+      const frameDuracion = 100; // duración ms por frame
+      
+      const animarFrame = () => {
+        if (frame > totalFrames) {
+          // Termina la animación y vuelve a idle
+          this.atacando = false;
+          const tsIdle = new Date().getTime();
+          this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Idle/Bringer-of-Death_Idle_1.1.png?${tsIdle}')`;
+          return;
+        }
+        
+        const ts = new Date().getTime();
+        this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Attack/Bringer-of-Death_Attack_${frame}.png?${ts}')`;
+
+        // Aplica daño justo en el frame 5 (puedes ajustar)
+        if (frame === 5) {
+          this.realizarAtaque();
+        }
+
+        frame++;
+        setTimeout(animarFrame, frameDuracion);
+      };
+
+      animarFrame();
+    }
+  }
+  
+  morir() {
+    this.estado = 'muerto';
+    console.log("Boss: cambio a sprite muerte");
+    const timestamp = new Date().getTime();
+    this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Death/Bringer-of-Death_Death_1.png?${timestamp}')`;
+    setTimeout(() => {
+      if (this.element.parentNode) {
+        this.element.parentNode.removeChild(this.element);
+      }
+      console.log("Boss derrotado, ¡has ganado el juego!");
+    }, 2000);
+  }
+}
+
+
+
+
 
 
 
