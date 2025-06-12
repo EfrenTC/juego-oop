@@ -10,13 +10,6 @@ body {
 }
 
 
-#puntos {
-  font-size: 1.2rem;
-  margin: 10px 0;
-  color: #333;
-}
-
-
 #game-container {
   position: relative;
   width: 95vw;
@@ -157,6 +150,21 @@ body {
   }
 }
 
+@keyframes animar-atacar {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -2048px 0; /* 256px * 8 frames */
+  }
+}
+
+.animar-atacar {
+  animation: animar-atacar 0.4s steps(8) forwards;
+  background-size: 2048px 320px; /* Tamaño total del spritesheet */
+}
+
+
 
 .boss {
   position: absolute;
@@ -170,39 +178,33 @@ body {
   transform-origin: center bottom; /* Importante para que gire desde el centro-abajo */
 }
 
-
-
-
-/* Indicador de puntuación (opcional) */
-.puntuacion {
+#mensaje-victoria {
   position: fixed;
-  top: 50px;
-  left: 20px;
-  color: white;
-  font-family: Arial, sans-serif;
-  font-size: 18px;
-  font-weight: bold;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-  z-index: 1000;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 80px;
+  font-family: 'Press Start 2P', monospace; /* Fuente pixelada */
+  color: gold;
+  text-shadow: 0 0 10px #fff, 0 0 20px #f5d442;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 2s ease-in;
+  pointer-events: none;
+}
+
+#mensaje-victoria.mostrar {
+  opacity: 1;
+}
+
+.oculto {
+  display: none;
 }
 
 
-/* Monedas */
-.moneda {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  background: radial-gradient(circle, gold, #ffa500);
-  border-radius: 50%;
-  border: 2px solid #ff8c00;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-  animation: brillar 2s ease-in-out infinite alternate;
-}
 
-@keyframes brillar {
-  from { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-  to   { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
-}
+
+
 
 /* Escalado responsivo */
 @media (max-width: 1300px) {

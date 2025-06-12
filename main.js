@@ -8,7 +8,6 @@ class Game {
     this.enemigos = [];
     this.puntuacion = 0;
 
-    // Configuración de niveles
     this.niveles = [
       { fondo: "./assets/backgrounds/Background1.png", sueloY: 590 },
       { fondo: "./assets/backgrounds/Background2.png", sueloY: 530 },
@@ -25,23 +24,44 @@ class Game {
     this.agregarEventos();
     this.crearEnemigos();
     this.loopJuego();
-  } 
 
-crearEscenario() {
-  // Ajustar fondo y suelo según el nivel actual
-  const nivel = this.niveles[this.nivelActual];
-  this.container.style.backgroundImage = `url(${nivel.fondo})`;
-  this.personaje.posicionInicialY = nivel.sueloY;
-  this.personaje.y = nivel.sueloY;
-  this.personaje.actualizarPosicion();
+    this.audioFondo = new Audio("./assets/sounds/blasphemous1.m4a");
+    this.audioFondo.loop = true;
+    this.audioFondo.volume = 0.3;
 
-  // Crear monedas
-  for (let i = 0; i < 5; i++) {
-    const moneda = new Moneda();
-    this.monedas.push(moneda);
-    this.container.appendChild(moneda.element);
+    this.audioBoss = new Audio("./assets/sounds/blasphemous2.m4a");
+    this.audioBoss.loop = true;
+    this.audioBoss.volume = 0.3;
   }
-}
+
+  iniciarMusica() {
+    this.audioFondo.play().catch(err => console.warn("Error al reproducir música:", err));
+  }
+
+  cambiarAMusicaBoss() {
+    this.audioFondo.pause();
+    this.audioFondo.currentTime = 0;
+
+    this.audioBoss.play().catch(err => console.warn("Error al reproducir música del boss:", err));
+  }
+
+
+
+  crearEscenario() {
+    // Ajustar fondo y suelo según el nivel actual
+    const nivel = this.niveles[this.nivelActual];
+    this.container.style.backgroundImage = `url(${nivel.fondo})`;
+    this.personaje.posicionInicialY = nivel.sueloY;
+    this.personaje.y = nivel.sueloY;
+    this.personaje.actualizarPosicion();
+
+    // Crear monedas
+    for (let i = 0; i < 5; i++) {
+      const moneda = new Moneda();
+      this.monedas.push(moneda);
+      this.container.appendChild(moneda.element);
+    }
+  }
 
 
   agregarEventos() {
@@ -59,70 +79,77 @@ crearEscenario() {
 
     window.addEventListener("keyup", (e) => {
       if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-        this.personaje.detenerAnimacion();
+        this.personaje.detenerMovimiento(); // ⬅️ Antes: detenerAnimacion()
       }
     });
+
 
     this.checkColisiones();
   }
 
-verificarCambioNivel() {
-  const personajeRight = this.personaje.x + this.personaje.element.offsetWidth;
-  const containerWidth = this.container.offsetWidth;
+  verificarCambioNivel() {
+    const personajeRight = this.personaje.x + this.personaje.element.offsetWidth;
+    const containerWidth = this.container.offsetWidth;
 
-  if (personajeRight >= containerWidth && this.nivelActual < this.niveles.length - 1) {
-    this.nivelActual++;
-    const sueloActual = this.niveles[this.nivelActual].sueloY;
+    if (personajeRight >= containerWidth && this.nivelActual < this.niveles.length - 1) {
+      this.nivelActual++;
+      const sueloActual = this.niveles[this.nivelActual].sueloY;
 
-    this.container.style.backgroundImage = `url('${this.niveles[this.nivelActual].fondo}')`;
+      this.container.style.backgroundImage = `url('${this.niveles[this.nivelActual].fondo}')`;
 
-    // Posiciones del personaje
-    this.personaje.x = 10;
-    this.personaje.y = sueloActual;
-    this.personaje.posicionInicialY = sueloActual; // ⬅️ Esta línea es CRUCIAL
-    this.personaje.actualizarPosicion();
-    this.crearEnemigos(); 
+      // Posiciones del personaje
+      this.personaje.x = 10;
+      this.personaje.y = sueloActual;
+      this.personaje.posicionInicialY = sueloActual;
+      this.personaje.actualizarPosicion();
+      this.crearEnemigos();
 
-    console.log(`Nivel cambiado a ${this.nivelActual}`);
-  }
-}
+      // Cambiar música si es el último nivel (boss)
+      if (this.nivelActual === this.niveles.length - 1) {
+        this.cambiarAMusicaBoss();  // ⬅️ Esto llama al método para cambiar la canción
+      }
 
-
-crearEnemigos() {
-  const sueloY = this.niveles[this.nivelActual].sueloY;
-
-  // Limpia enemigos anteriores
-  this.enemigos.forEach((enemigo) => enemigo.element.remove());
-  this.enemigos = [];
-
-  if (this.nivelActual === 5) {
-    // Crear boss directamente al cargar el nivel
-    const bossX = window.innerWidth / 2 - 250; // Ajusta según ancho del boss
-    const boss = new Boss(bossX, sueloY, this.personaje);
-
-    this.enemigos.push(boss);
-    this.container.appendChild(boss.element);
-
-    console.log("Boss creado en nivel 5");
-    console.log(`Posición del boss: x=${boss.x}, y=${boss.y}`);
-    console.log(`Tamaño del boss: width=${boss.width}, height=${boss.height}`);
-    console.log(`SueloY del nivel: ${sueloY}`);
-
-    return; // Importante: evita que cree enemigos normales en nivel 5
+      console.log(`Nivel cambiado a ${this.nivelActual}`);
+    }
   }
 
-  // Para los demás niveles, generar enemigos normales
-  const cantidadEnemigos = 1 + this.nivelActual;
 
-  for (let i = 0; i < cantidadEnemigos; i++) {
-    const x = 300 + i * 150 + Math.random() * 50; // Distribución horizontal
-    const enemigo = new Enemigo(x, sueloY, this.personaje, this.nivelActual);
-    this.enemigos.push(enemigo);
-    this.container.appendChild(enemigo.element);
+
+  crearEnemigos() {
+    const sueloY = this.niveles[this.nivelActual].sueloY;
+
+    // Limpia enemigos anteriores
+    this.enemigos.forEach((enemigo) => enemigo.element.remove());
+    this.enemigos = [];
+
+    if (this.nivelActual === 5) {
+      // Crear boss directamente al cargar el nivel
+      const bossX = window.innerWidth / 2 - 250; // Ajusta según ancho del boss
+      const boss = new Boss(bossX, sueloY, this.personaje);
+
+      this.enemigos.push(boss);
+      this.container.appendChild(boss.element);
+
+      console.log("Boss creado en nivel 5");
+      console.log(`Posición del boss: x=${boss.x}, y=${boss.y}`);
+      console.log(`Tamaño del boss: width=${boss.width}, height=${boss.height}`);
+      console.log(`SueloY del nivel: ${sueloY}`);
+
+      return; // Importante: evita que cree enemigos normales en nivel 5
+    }
+
+    // Para los demás niveles, generar enemigos normales
+    const cantidadEnemigos = 1 + this.nivelActual;
+
+    for (let i = 0; i < cantidadEnemigos; i++) {
+      const x = 300 + i * 150 + Math.random() * 50; // Distribución horizontal
+      const enemigo = new Enemigo(x, sueloY, this.personaje, this.nivelActual);
+      this.enemigos.push(enemigo);
+      this.container.appendChild(enemigo.element);
+    }
+
+    console.log("Total enemigos en este nivel:", this.enemigos.length);
   }
-
-  console.log("Total enemigos en este nivel:", this.enemigos.length);
-}
 
 
 
@@ -141,43 +168,43 @@ crearEnemigos() {
     requestAnimationFrame(() => this.loopJuego());
   }
 
- procesarAtaqueJugador() {
-  const personajeRect = this.personaje.element.getBoundingClientRect();
+  procesarAtaqueJugador() {
+    const personajeRect = this.personaje.element.getBoundingClientRect();
 
-  this.enemigos.forEach((enemigo, index) => {
-    const enemigoRect = enemigo.element.getBoundingClientRect();
+    this.enemigos.forEach((enemigo, index) => {
+      const enemigoRect = enemigo.element.getBoundingClientRect();
 
-    const colisiona = !(
-      personajeRect.right < enemigoRect.left ||
-      personajeRect.left > enemigoRect.right ||
-      personajeRect.bottom < enemigoRect.top ||
-      personajeRect.top > enemigoRect.bottom
-    );
+      const colisiona = !(
+        personajeRect.right < enemigoRect.left ||
+        personajeRect.left > enemigoRect.right ||
+        personajeRect.bottom < enemigoRect.top ||
+        personajeRect.top > enemigoRect.bottom
+      );
 
-    const direccionCorrecta =
-      (this.personaje.direccion === 1 && enemigoRect.left >= personajeRect.left) ||
-      (this.personaje.direccion === -1 && enemigoRect.left <= personajeRect.left);
+      const direccionCorrecta =
+        (this.personaje.direccion === 1 && enemigoRect.left >= personajeRect.left) ||
+        (this.personaje.direccion === -1 && enemigoRect.left <= personajeRect.left);
 
-    if (colisiona && direccionCorrecta) {
-      enemigo.recibirDaño(this.personaje.dañoAtaque);
-      console.log(`¡Golpe exitoso! Vida enemigo: ${enemigo.vida}`);
+      if (colisiona && direccionCorrecta) {
+        enemigo.recibirDaño(this.personaje.dañoAtaque);
+        console.log(`¡Golpe exitoso! Vida enemigo: ${enemigo.vida}`);
 
-      const fuerzaEmpuje = 30;
+        const fuerzaEmpuje = 30;
 
-      // Evitar empujar al boss
-      if (!(enemigo instanceof Boss)) {
-        enemigo.x += this.personaje.direccion * fuerzaEmpuje;
+        // Evitar empujar al boss
+        if (!(enemigo instanceof Boss)) {
+          enemigo.x += this.personaje.direccion * fuerzaEmpuje;
+        }
+
+        this.actualizarPuntuacion(5);
+
+        if (enemigo.vida <= 0) {
+          this.actualizarPuntuacion(50);
+          console.log('¡Enemigo eliminado! +50 puntos');
+        }
       }
-
-      this.actualizarPuntuacion(5);
-
-      if (enemigo.vida <= 0) {
-        this.actualizarPuntuacion(50);
-        console.log('¡Enemigo eliminado! +50 puntos');
-      }
-    }
-  });
-}
+    });
+  }
 
   checkColisiones() {
     setInterval(() => {
@@ -212,7 +239,7 @@ crearEnemigos() {
 class Personaje {
   constructor() {
     this.x = 100;
-    this.posicionInicialY =   0;
+    this.posicionInicialY = 0;
     this.y = this.posicionInicialY;
     this.width = 100;
     this.height = 100;
@@ -222,6 +249,15 @@ class Personaje {
     this.animando = false;
     this.atacando = false;
     this.moviendo = false;
+
+    this.sonidoPasos = new Audio("./assets/sounds/Pasos1.ogg");
+    this.sonidoPasos.loop = true; // Reproduce en bucle mientras se mueve
+    this.sonidoPasos.volume = 0.4; // Opcional: ajusta volumen
+
+    this.sonidoMuerte = new Audio("./assets/sounds/Playerdie.m4a");
+    this.sonidoMuerte.volume = 0.6; // Ajusta volumen si quieres
+
+
 
     // Sistema de vida y combate
     this.vida = 100;
@@ -257,18 +293,18 @@ class Personaje {
 
     // Cambiar color según la vida
     if (porcentajeVida > 60) {
-      this.barraVida.style.backgroundColor = '#FF0000'; 
+      this.barraVida.style.backgroundColor = '#FF0000';
     } else if (porcentajeVida > 30) {
-      this.barraVida.style.backgroundColor = '#BD3039'; 
+      this.barraVida.style.backgroundColor = '#BD3039';
     } else {
-      this.barraVida.style.backgroundColor = '#8B0000'; 
+      this.barraVida.style.backgroundColor = '#8B0000';
     }
   }
 
   mover(evento) {
-    if (this.atacando) return; // no mover mientras ataca
+    if (this.atacando) return;
 
-    this.moviendo = true;
+    let movimiento = false;
 
     if (evento.key === "ArrowRight") {
       this.x += this.velocidad;
@@ -277,6 +313,7 @@ class Personaje {
         this.element.style.transform = "scale(2) scaleX(1)";
       }
       this.iniciarAnimacionCaminar();
+      movimiento = true;
 
     } else if (evento.key === "ArrowLeft") {
       this.x -= this.velocidad;
@@ -285,13 +322,32 @@ class Personaje {
         this.element.style.transform = "scale(2) scaleX(-1)";
       }
       this.iniciarAnimacionCaminar();
+      movimiento = true;
 
     } else if (evento.key === "ArrowUp" && !this.saltando) {
       this.saltar();
     }
 
+    // Iniciar sonido de pasos si hay movimiento
+    if (movimiento && this.sonidoPasos.paused) {
+      this.sonidoPasos.play().catch(() => { });
+    }
+
+    this.moviendo = movimiento;
     this.actualizarPosicion();
   }
+
+  detenerMovimiento() {
+    this.moviendo = false;
+    this.element.classList.remove("animar-caminar");
+    this.element.style.backgroundImage = "url('./assets/Idle.png')";
+
+    // Detener sonido de pasos
+    this.sonidoPasos.pause();
+    this.sonidoPasos.currentTime = 0;
+  }
+
+
 
   iniciarAnimacionCaminar() {
     if (!this.element.classList.contains("animar-caminar")) {
@@ -307,44 +363,44 @@ class Personaje {
   }
 
   saltar() {
-  if (this.saltando) return;
+    if (this.saltando) return;
 
-  this.saltando = true;
-  this.element.classList.remove("animar-caminar");
-  this.element.style.backgroundImage = "url('./assets/Jump.png')";
+    this.saltando = true;
+    this.element.classList.remove("animar-caminar");
+    this.element.style.backgroundImage = "url('./assets/Jump.png')";
 
-  const alturaMaxima = this.y - 200;
+    const alturaMaxima = this.y - 200;
 
-  const salto = setInterval(() => {
-    if (this.y > alturaMaxima) {
-      this.y -= 15;
-    } else {
-      clearInterval(salto);
-      this.caer(); // empieza la caída cuando alcanza altura máxima
-    }
-    this.actualizarPosicion();
-  }, 20);
-}
-
-caer() {
-  const gravedad = setInterval(() => {
-    if (this.y < this.posicionInicialY) {
-      this.y += 10;
-    } else {
-      clearInterval(gravedad);
-      this.saltando = false;
-      this.y = this.posicionInicialY;
-
-      if (this.moviendo) {
-        this.element.style.backgroundImage = "url('./assets/Idle.png')";
-        this.element.classList.add("animar-caminar");
+    const salto = setInterval(() => {
+      if (this.y > alturaMaxima) {
+        this.y -= 15;
       } else {
-        this.element.style.backgroundImage = "url('./assets/Idle.png')";
+        clearInterval(salto);
+        this.caer(); // empieza la caída cuando alcanza altura máxima
       }
-    }
-    this.actualizarPosicion();
-  }, 20);
-}
+      this.actualizarPosicion();
+    }, 20);
+  }
+
+  caer() {
+    const gravedad = setInterval(() => {
+      if (this.y < this.posicionInicialY) {
+        this.y += 10;
+      } else {
+        clearInterval(gravedad);
+        this.saltando = false;
+        this.y = this.posicionInicialY;
+
+        if (this.moviendo) {
+          this.element.style.backgroundImage = "url('./assets/Idle.png')";
+          this.element.classList.add("animar-caminar");
+        } else {
+          this.element.style.backgroundImage = "url('./assets/Idle.png')";
+        }
+      }
+      this.actualizarPosicion();
+    }, 20);
+  }
 
 
   atacar() {
@@ -356,6 +412,9 @@ caer() {
     this.element.classList.remove("animar-caminar");
     this.element.style.backgroundImage = "url('./assets/Attacks.png')";
     this.element.classList.add("animar-atacar");
+
+    const ataqueAudio = new Audio('./assets/sounds/AtaqueEspada1.ogg');
+    ataqueAudio.play();
 
     // Retornar true para indicar que está atacando (para el sistema de combate)
     setTimeout(() => {
@@ -414,16 +473,20 @@ caer() {
     console.log(`¡Jugador se cura ${cantidad} puntos! Vida actual: ${this.vida}`);
   }
 
-  morir() {
-    console.log('¡Game Over!');
-    this.element.style.filter = 'grayscale(1) brightness(0.5)';
+ morir() {
+  console.log('¡Game Over!');
+  this.element.style.filter = 'grayscale(1) brightness(0.5)';
 
-    // Aquí puedes agregar lógica de game over
-    setTimeout(() => {
-      alert('¡Has muerto! Reiniciando...');
-      this.reiniciar();
-    }, 1000);
-  }
+  // Reproducir sonido de muerte
+  this.sonidoMuerte.currentTime = 0;
+  this.sonidoMuerte.play();
+
+  setTimeout(() => {
+    alert('¡Has muerto! Reiniciando...');
+    this.reiniciar();
+  }, 1000);
+}
+
 
   reiniciar() {
     this.vida = this.vidaMaxima;
@@ -471,7 +534,7 @@ class Enemigo {
     this.tiempoUltimoAtaque = 0;
     this.cooldownAtaque = 2000;
 
-    this.puntoInicialX = x; 
+    this.puntoInicialX = x;
     this.rangoPatrullaje = 100;
     this.limiteIzquierdo = Math.max(0, x - this.rangoPatrullaje / 2);
     this.limiteDerecho = Math.min(window.innerWidth - this.width, x + this.rangoPatrullaje / 2);
@@ -669,10 +732,16 @@ class Enemigo {
     this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Idle.png')";
   }
 
-  iniciarAnimacionAtacar() {
-    this.element.classList.add("animar-atacar");
-    this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Attack1.png')";
-  }
+ iniciarAnimacionAtacar() {
+  this.element.classList.add("animar-atacar");
+  this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Attack1.png')";
+}
+
+detenerAnimacionAtacar() {
+  this.element.classList.remove("animar-atacar");
+  this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Idle.png')";
+}
+
 
   detenerAnimacionAtacar() {
     this.element.classList.remove("animar-atacar");
@@ -696,18 +765,23 @@ class Enemigo {
 class Boss extends Enemigo {
   constructor(x, y, jugador) {
     super(x, y, jugador);
-    
+
     this.width = 500;   // Reducido de 512
     this.height = 700;  // Reducido de 640 para que quepa mejor
-    
-    this.vida = 1000;
+
+    this.vida = 500;
     this.dañoAtaque = 5;
     this.velocidad = 0;
     this.rangoDeteccion = 0;
     this.rangoAtaque = 150;
     this.cooldownAtaque = 2000; // 2 segundos de cooldown
     this.tiempoUltimoAtaque = 0;
-    
+    this.sonidoAtaque = new Audio('./assets/sounds/Bossgolpe.ogg');
+
+    this.sonidoMuerteBoss = new Audio("./assets/sounds/BossDie.m4a");
+    this.sonidoMuerteBoss.volume = 0.2; // Ajusta volumen si quieres
+
+
     // Ajustes de estilo
     this.element.style.width = `${this.width}px`;
     this.element.style.height = `${this.height}px`;
@@ -716,25 +790,25 @@ class Boss extends Enemigo {
     this.element.style.backgroundRepeat = "no-repeat";
 
     if (typeof y === 'number') {
-      this.y = y - this.height + 70; 
+      this.y = y - this.height + 70;
       if (this.y < 0) this.y = 20;
     } else {
       this.y = Math.max(20, window.innerHeight - this.height - 50);
     }
     this.actualizarPosicion();
-    
+
     this.element.classList.remove('enemigo');
     this.element.classList.add('boss');
-    
+
     const timestamp = new Date().getTime();
     this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Idle/Bringer-of-Death_Idle_1.1.png?${timestamp}')`;
-    
+
     this.atacando = false;
 
     console.log(`Boss posicionado en: x=${this.x}, y=${this.y}, sueloY=${y}`);
     console.log(`Boss ocupa desde Y=${this.y} hasta Y=${this.y + this.height}`);
-  } 
-  
+  }
+
   verificarColision(jugador) {
     const jugadorRect = {
       x: jugador.x,
@@ -742,18 +816,18 @@ class Boss extends Enemigo {
       width: jugador.width || 64,
       height: jugador.height || 64
     };
-    
+
     const bossRect = {
       x: this.x,
       y: this.y,
       width: this.width,
       height: this.height
     };
-    
+
     return jugadorRect.x < bossRect.x + bossRect.width &&
-           jugadorRect.x + jugadorRect.width > bossRect.x &&
-           jugadorRect.y < bossRect.y + bossRect.height &&
-           jugadorRect.y + jugadorRect.height > bossRect.y;
+      jugadorRect.x + jugadorRect.width > bossRect.x &&
+      jugadorRect.y < bossRect.y + bossRect.height &&
+      jugadorRect.y + jugadorRect.height > bossRect.y;
   }
 
   actualizar() {
@@ -763,56 +837,84 @@ class Boss extends Enemigo {
       this.atacar();
     }
   }
-  
-  atacar() {
-    if (this.atacando) return;
 
-    const tiempoActual = Date.now();
-    if (tiempoActual - this.tiempoUltimoAtaque >= this.cooldownAtaque) {
-      this.atacando = true;
-      this.tiempoUltimoAtaque = tiempoActual;
+atacar() {
+  if (this.atacando) return;
 
-      let frame = 1;
-      const totalFrames = 10;
-      const frameDuracion = 100; // duración ms por frame
-      
-      const animarFrame = () => {
-        if (frame > totalFrames) {
-          // Termina la animación y vuelve a idle
-          this.atacando = false;
-          const tsIdle = new Date().getTime();
-          this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Idle/Bringer-of-Death_Idle_1.1.png?${tsIdle}')`;
-          return;
-        }
-        
-        const ts = new Date().getTime();
-        this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Attack/Bringer-of-Death_Attack_${frame}.png?${ts}')`;
+  const tiempoActual = Date.now();
+  if (tiempoActual - this.tiempoUltimoAtaque >= this.cooldownAtaque) {
+    this.atacando = true;
+    this.tiempoUltimoAtaque = tiempoActual;
 
-        // Aplica daño justo en el frame 5 (puedes ajustar)
-        if (frame === 5) {
-          this.realizarAtaque();
-        }
+    let frame = 1;
+    const totalFrames = 10;
+    const frameDuracion = 100; // duración ms por frame
 
-        frame++;
-        setTimeout(animarFrame, frameDuracion);
-      };
+    const animarFrame = () => {
+      if (frame > totalFrames) {
+        // Termina la animación y vuelve a idle
+        this.atacando = false;
+        const tsIdle = new Date().getTime();
+        this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Idle/Bringer-of-Death_Idle_1.1.png?${tsIdle}')`;
+        return;
+      }
 
-      animarFrame();
-    }
+      const ts = new Date().getTime();
+      this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Attack/Bringer-of-Death_Attack_${frame}.png?${ts}')`;
+
+      // Aplica daño y sonido justo en el frame 5
+      if (frame === 5) {
+        this.realizarAtaque();
+
+        // Reproducir sonido de ataque
+        this.sonidoAtaque.currentTime = 0;
+        this.sonidoAtaque.play();
+      }
+
+      frame++;
+      setTimeout(animarFrame, frameDuracion);
+    };
+
+    animarFrame();
   }
-  
+}
+
+
   morir() {
     this.estado = 'muerto';
-    console.log("Boss: cambio a sprite muerte");
-    const timestamp = new Date().getTime();
-    this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Death/Bringer-of-Death_Death_1.png?${timestamp}')`;
-    setTimeout(() => {
-      if (this.element.parentNode) {
-        this.element.parentNode.removeChild(this.element);
+    console.log("Boss: comienza animación de muerte");
+
+    let frame = 1;
+    const totalFrames = 10;
+    const frameDuracion = 300; // duración en ms por frame (ajustable)
+
+      this.sonidoMuerteBoss.currentTime = 0;
+      this.sonidoMuerteBoss.play();
+
+    const animarMuerte = () => {
+      if (frame > totalFrames) {
+        // Al terminar la animación, se elimina el boss
+        if (this.element.parentNode) {
+          this.element.parentNode.removeChild(this.element);
+        }
+        console.log("Boss derrotado, ¡has ganado el juego!");
+        return;
       }
-      console.log("Boss derrotado, ¡has ganado el juego!");
-    }, 2000);
+
+      const timestamp = new Date().getTime();
+      this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Death/Bringer-of-Death_Death_${frame}.png?${timestamp}')`;
+
+      frame++;
+      setTimeout(animarMuerte, frameDuracion);
+    };
+
+    const mensaje = document.getElementById("mensaje-victoria");
+    mensaje.classList.remove("oculto");
+    mensaje.classList.add("mostrar");
+
+    animarMuerte();
   }
+
 }
 
 
@@ -844,3 +946,15 @@ class Moneda {
 
 
 const juego = new Game();
+
+// Iniciar música tras presionar una flecha
+document.addEventListener("keydown", (event) => {
+  const teclasFlecha = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+
+  if (teclasFlecha.includes(event.key)) {
+    juego.iniciarMusica();
+    // Evitamos que se vuelva a ejecutar
+    document.removeEventListener("keydown", arguments.callee);
+  }
+});
+
