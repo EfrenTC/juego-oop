@@ -153,20 +153,29 @@ class Game {
 
 
 
-  loopJuego() {
-    this.enemigos.forEach((enemigo, index) => {
-      if (enemigo.vida > 0) {
-        enemigo.update();
-        if (enemigo.colisionaCon(this.personaje) && !this.personaje.invulnerable) {
-          console.log("¡Enemigo toca al jugador!");
-        }
-      } else {
-        this.enemigos.splice(index, 1);
-      }
-    });
+loopJuego() {
+  this.enemigos.forEach((enemigo, index) => {
+    if (enemigo.vida > 0) {
+      enemigo.update();
 
-    requestAnimationFrame(() => this.loopJuego());
-  }
+      if (enemigo.verificarColision && enemigo.verificarColision(this.personaje) && !this.personaje.invulnerable) {
+        console.log("¡Enemigo toca al jugador!");
+        // Aquí podrías hacer daño al jugador o reacción
+        this.personaje.recibirDaño(enemigo.dañoAtaque || 1);
+      }
+
+    } else {
+      // Si el enemigo tiene método morir, ejecútalo antes de eliminarlo
+      if (enemigo.morir) {
+        enemigo.morir();
+      }
+      this.enemigos.splice(index, 1);
+    }
+  });
+
+  requestAnimationFrame(() => this.loopJuego());
+}
+
 
   procesarAtaqueJugador() {
     const personajeRect = this.personaje.element.getBoundingClientRect();
@@ -545,6 +554,7 @@ class Enemigo {
 
     this.actualizarPosicion();
     this.element.style.transform = `scaleX(${this.direccion})`;
+    this.sonidoAtaque = new Audio('./assets/sounds/Enemigo.ogg');
 
     // Estado para controlar animaciones
     this.atacando = false;
@@ -636,6 +646,11 @@ class Enemigo {
       this.iniciarAnimacionAtacar();
       this.realizarAtaque();
       this.tiempoUltimoAtaque = tiempoActual;
+
+   
+this.sonidoAtaque.currentTime = 0;
+    this.sonidoAtaque.play();
+
 
       setTimeout(() => {
         this.atacando = false;
@@ -762,32 +777,42 @@ detenerAnimacionAtacar() {
 
 }
 
+
 class Boss extends Enemigo {
   constructor(x, y, jugador) {
     super(x, y, jugador);
 
-    this.width = 500;   // Reducido de 512
-    this.height = 700;  // Reducido de 640 para que quepa mejor
+    this.jugador = jugador;
 
-    this.vida = 500;
+    this.x = x;
+    this.width = 500;
+    this.height = 700;
+
+    this.vida = 1000;
     this.dañoAtaque = 5;
     this.velocidad = 0;
     this.rangoDeteccion = 0;
     this.rangoAtaque = 150;
-    this.cooldownAtaque = 2000; // 2 segundos de cooldown
+    this.cooldownAtaque = 2000;
     this.tiempoUltimoAtaque = 0;
-    this.sonidoAtaque = new Audio('./assets/sounds/Bossgolpe.ogg');
 
-    this.sonidoMuerteBoss = new Audio("./assets/sounds/BossDie.m4a");
-    this.sonidoMuerteBoss.volume = 0.2; // Ajusta volumen si quieres
+    this.estado = 'vivo';
+    this.atacando = false;
 
+    this.idleFrames = 8;
+    this.attackFrames = 10;
+    this.currentIdleFrame = 1;
+    this.idleAnimationSpeed = 150;
+    this.idleInterval = null;
 
-    // Ajustes de estilo
+    this.element.classList.remove('enemigo');
+    this.element.classList.add('boss');
+   
+
     this.element.style.width = `${this.width}px`;
     this.element.style.height = `${this.height}px`;
-    this.element.style.backgroundPosition = "bottom center";
-    this.element.style.backgroundSize = "contain";
-    this.element.style.backgroundRepeat = "no-repeat";
+    this.element.style.transformOrigin = "center bottom";
+    this.element.style.imageRendering = "pixelated";
 
     if (typeof y === 'number') {
       this.y = y - this.height + 70;
@@ -795,18 +820,74 @@ class Boss extends Enemigo {
     } else {
       this.y = Math.max(20, window.innerHeight - this.height - 50);
     }
+
+    document.body.appendChild(this.element);
     this.actualizarPosicion();
 
-    this.element.classList.remove('enemigo');
-    this.element.classList.add('boss');
+    this.sonidoAtaque = new Audio('./assets/sounds/Bossgolpe.ogg');
+    this.sonidoMuerteBoss = new Audio("./assets/sounds/BossDie.m4a");
+    this.sonidoMuerteBoss.volume = 0.2;
+    this.musicaBoss = new Audio("./assets/sounds/blasphemous2.m4a");
+    this.musicaBoss.loop = true;
+    this.musicaBoss.volume = 0.7;
+    this.musicaBoss.play().catch(e => console.log("No se pudo reproducir música automáticamente:", e));
 
-    const timestamp = new Date().getTime();
-    this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Idle/Bringer-of-Death_Idle_1.1.png?${timestamp}')`;
+    this.preloadImages()
+      .then(() => {
+        this.iniciarAnimacionIdle();
+        console.log("Boss cargado y listo");
+      })
+      .catch(error => {
+        console.error("Error cargando imágenes del boss:", error);
+      });
+  }
 
-    this.atacando = false;
+  async preloadImages() {
+    const loadImage = (src) =>
+      new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve();
+        img.onerror = () => reject(`Error cargando: ${src}`);
+        img.src = src;
+      });
 
-    console.log(`Boss posicionado en: x=${this.x}, y=${this.y}, sueloY=${y}`);
-    console.log(`Boss ocupa desde Y=${this.y} hasta Y=${this.y + this.height}`);
+    const promesas = [];
+
+    for (let i = 1; i <= this.idleFrames; i++) {
+      promesas.push(loadImage(`./assets/Boss/Individual Sprite/Idle/Bringer-of-Death_Idle_${i}.png`));
+    }
+
+    for (let i = 1; i <= this.attackFrames; i++) {
+      promesas.push(loadImage(`./assets/Boss/Individual Sprite/Attack/Bringer-of-Death_Attack_${i}.png`));
+    }
+
+    for (let i = 1; i <= 10; i++) {
+      promesas.push(loadImage(`./assets/Boss/Individual Sprite/Death/Bringer-of-Death_Death_${i}.png`));
+    }
+
+    await Promise.all(promesas);
+  }
+
+  iniciarAnimacionIdle() {
+    if (this.idleInterval) {
+      clearInterval(this.idleInterval);
+      this.idleInterval = null;
+    }
+
+    if (this.estado !== 'vivo' || this.atacando) return;
+
+    this.currentIdleFrame = 1;
+    this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Idle/Bringer-of-Death_Idle_${this.currentIdleFrame}.png')`;
+
+    this.idleInterval = setInterval(() => {
+      if (this.estado !== 'vivo' || this.atacando) {
+        clearInterval(this.idleInterval);
+        this.idleInterval = null;
+        return;
+      }
+      this.currentIdleFrame = (this.currentIdleFrame % this.idleFrames) + 1;
+      this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Idle/Bringer-of-Death_Idle_${this.currentIdleFrame}.png')`;
+    }, this.idleAnimationSpeed);
   }
 
   verificarColision(jugador) {
@@ -814,108 +895,136 @@ class Boss extends Enemigo {
       x: jugador.x,
       y: jugador.y,
       width: jugador.width || 64,
-      height: jugador.height || 64
+      height: jugador.height || 64,
     };
 
     const bossRect = {
       x: this.x,
       y: this.y,
       width: this.width,
-      height: this.height
+      height: this.height,
     };
 
-    return jugadorRect.x < bossRect.x + bossRect.width &&
+    return (
+      jugadorRect.x < bossRect.x + bossRect.width &&
       jugadorRect.x + jugadorRect.width > bossRect.x &&
       jugadorRect.y < bossRect.y + bossRect.height &&
-      jugadorRect.y + jugadorRect.height > bossRect.y;
+      jugadorRect.y + jugadorRect.height > bossRect.y
+    );
   }
+update() {
+  if (this.estado === 'muerto') return;
 
-  actualizar() {
-    if (this.estado === 'muerto') return;
+  const jugadorCentroX = this.jugador.x + (this.jugador.width || 64) / 2;
+  const bossCentroX = this.x + this.width / 2;
 
-    if (this.verificarColision(this.jugador)) {
-      this.atacar();
-    }
-  }
+  // Flip del boss para que mire al jugador
+this.element.style.transform = jugadorCentroX < bossCentroX ? "scaleX(1)" : "scaleX(-1)";
 
-atacar() {
-  if (this.atacando) return;
 
-  const tiempoActual = Date.now();
-  if (tiempoActual - this.tiempoUltimoAtaque >= this.cooldownAtaque) {
-    this.atacando = true;
-    this.tiempoUltimoAtaque = tiempoActual;
+  const enRangoX = Math.abs(jugadorCentroX - bossCentroX) <= this.rangoAtaque;
+  const enRangoY = Math.abs(this.jugador.y - this.y) < this.height;
 
-    let frame = 1;
-    const totalFrames = 10;
-    const frameDuracion = 100; // duración ms por frame
-
-    const animarFrame = () => {
-      if (frame > totalFrames) {
-        // Termina la animación y vuelve a idle
-        this.atacando = false;
-        const tsIdle = new Date().getTime();
-        this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Idle/Bringer-of-Death_Idle_1.1.png?${tsIdle}')`;
-        return;
-      }
-
-      const ts = new Date().getTime();
-      this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Attack/Bringer-of-Death_Attack_${frame}.png?${ts}')`;
-
-      // Aplica daño y sonido justo en el frame 5
-      if (frame === 5) {
-        this.realizarAtaque();
-
-        // Reproducir sonido de ataque
-        this.sonidoAtaque.currentTime = 0;
-        this.sonidoAtaque.play();
-      }
-
-      frame++;
-      setTimeout(animarFrame, frameDuracion);
-    };
-
-    animarFrame();
+  if (enRangoX && enRangoY) {
+    this.atacar();
   }
 }
 
 
-  morir() {
-    this.estado = 'muerto';
-    console.log("Boss: comienza animación de muerte");
+  atacar() {
+    if (this.atacando || this.estado === 'muerto') return;
+
+    const ahora = Date.now();
+    if (ahora - this.tiempoUltimoAtaque < this.cooldownAtaque) return;
+
+    this.atacando = true;
+    this.tiempoUltimoAtaque = ahora;
+
+    clearInterval(this.idleInterval);
+    this.idleInterval = null;
 
     let frame = 1;
-    const totalFrames = 10;
-    const frameDuracion = 300; // duración en ms por frame (ajustable)
+    const duracionFrame = 100;
 
-      this.sonidoMuerteBoss.currentTime = 0;
-      this.sonidoMuerteBoss.play();
+    const animarAtaque = () => {
+      if (frame > this.attackFrames) {
+        this.atacando = false;
+        this.iniciarAnimacionIdle();
+        return;
+      }
+
+      this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Attack/Bringer-of-Death_Attack_${frame}.png')`;
+
+      if (frame === 5) {
+        this.realizarAtaque();
+        this.sonidoAtaque.currentTime = 0;
+        this.sonidoAtaque.play().catch(e => console.log("No se pudo reproducir sonido de ataque:", e));
+      }
+
+      frame++;
+      setTimeout(animarAtaque, duracionFrame);
+    };
+
+    animarAtaque();
+  }
+
+  realizarAtaque() {
+    if (this.verificarColision(this.jugador)) {
+      this.jugador.recibirDaño(this.dañoAtaque);
+      console.log("Boss atacó al jugador!");
+    }
+  }
+
+  morir() {
+    if (this.estado === 'muerto') return;
+
+    this.estado = 'muerto';
+    this.atacando = false;
+
+    clearInterval(this.idleInterval);
+    this.idleInterval = null;
+    this.musicaBoss.pause();
+
+    this.sonidoMuerteBoss.currentTime = 0;
+    this.sonidoMuerteBoss.play().catch(e => console.log("No se pudo reproducir sonido de muerte:", e));
+
+    console.log("Boss: iniciando animación de muerte");
+
+    let frame = 1;
+    const deathFrames = 10;
+    const duracionFrame = 200;
 
     const animarMuerte = () => {
-      if (frame > totalFrames) {
-        // Al terminar la animación, se elimina el boss
+      if (frame > deathFrames) {
         if (this.element.parentNode) {
           this.element.parentNode.removeChild(this.element);
         }
         console.log("Boss derrotado, ¡has ganado el juego!");
+
+        const mensaje = document.getElementById("mensaje-victoria");
+        if (mensaje) {
+          mensaje.classList.remove("oculto");
+          mensaje.classList.add("mostrar");
+        }
         return;
       }
 
-      const timestamp = new Date().getTime();
-      this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Death/Bringer-of-Death_Death_${frame}.png?${timestamp}')`;
-
+      this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Death/Bringer-of-Death_Death_${frame}.png')`;
       frame++;
-      setTimeout(animarMuerte, frameDuracion);
+      setTimeout(animarMuerte, duracionFrame);
     };
-
-    const mensaje = document.getElementById("mensaje-victoria");
-    mensaje.classList.remove("oculto");
-    mensaje.classList.add("mostrar");
 
     animarMuerte();
   }
 
+  actualizarPosicion() {
+    this.element.style.left = `${this.x}px`;
+    this.element.style.top = `${this.y}px`;
+  }
 }
+
+
+
 
 
 

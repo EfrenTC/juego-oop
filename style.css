@@ -178,6 +178,10 @@ body {
   transform-origin: center bottom; /* Importante para que gire desde el centro-abajo */
 }
 
+
+
+
+
 #mensaje-victoria {
   position: fixed;
   top: 40%;
