@@ -319,7 +319,7 @@ class Personaje {
     this.y = this.posicionInicialY;
     this.width = 100;
     this.height = 100;
-    this.velocidad = 40;
+    this.velocidad = 15;
     this.saltando = false;
     this.direccion = 1;
     this.animando = false;
@@ -646,7 +646,7 @@ class Enemigo {
     this.rangoDeteccion = 200; // Aumentado proporcionalmente
     this.rangoAtaque = 130;    // Aumentado proporcionalmente
     this.vida = 100;
-    this.dañoAtaque = 15;
+    this.dañoAtaque = 8;
     this.tiempoUltimoAtaque = 0;
     this.cooldownAtaque = 2000;
 
