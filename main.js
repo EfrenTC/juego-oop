@@ -50,6 +50,8 @@ class Game {
 
     this.nivelActual = 0;
     this.container.style.backgroundImage = this.niveles[this.nivelActual];
+    this.enTransicion = false;
+
 
     this.crearEscenario();
     this.agregarEventos();
@@ -141,34 +143,51 @@ class Game {
     this.checkColisiones();
   }
 
-  verificarCambioNivel() {
-    const personajeRight = this.personaje.x + this.personaje.element.offsetWidth;
-    const limites = this.getLimitesNivel();
+async verificarCambioNivel() {
+  if (this.enTransicion) return;
 
-    // ✨ Cambiar nivel solo cuando llegue al límite derecho del nivel actual
-    if (personajeRight >= limites.derecho && this.nivelActual < this.niveles.length - 1) {
-      this.nivelActual++;
-      const sueloActual = this.niveles[this.nivelActual].sueloY;
-      const nuevosLimites = this.getLimitesNivel();
+  const personajeRight = this.personaje.x + this.personaje.element.offsetWidth;
+  const limites = this.getLimitesNivel();
 
-      this.container.style.backgroundImage = `url('${this.niveles[this.nivelActual].fondo}')`;
+  if (personajeRight >= limites.derecho && this.nivelActual < this.niveles.length - 1) {
+    this.enTransicion = true; // ⚠️ Bloquea futuros cambios hasta que termine
 
-      // ✨ Posicionar personaje en el límite izquierdo del nuevo nivel
-      this.personaje.x = nuevosLimites.izquierdo + 10;
-      this.personaje.y = sueloActual;
-      this.personaje.posicionInicialY = sueloActual;
-      this.personaje.actualizarPosicion();
-      this.crearEnemigos();
+    const overlay = document.getElementById('fade-overlay');
 
-      // Cambiar música si es el último nivel (boss)
-      if (this.nivelActual === this.niveles.length - 1) {
-        this.cambiarAMusicaBoss();
-      }
+    // Fade out
+    overlay.style.opacity = '1';
+    await new Promise(resolve => setTimeout(resolve, 600));
 
-      console.log(`Nivel cambiado a ${this.nivelActual}`);
-      console.log(`Nuevos límites: ${nuevosLimites.izquierdo} - ${nuevosLimites.derecho}`);
+    // Cambiar de nivel
+    this.nivelActual++;
+    const sueloActual = this.niveles[this.nivelActual].sueloY;
+    const nuevosLimites = this.getLimitesNivel();
+
+    this.container.style.backgroundImage = `url('${this.niveles[this.nivelActual].fondo}')`;
+
+    this.personaje.x = nuevosLimites.izquierdo + 10;
+    this.personaje.y = sueloActual;
+    this.personaje.posicionInicialY = sueloActual;
+    this.personaje.actualizarPosicion();
+
+    this.crearEnemigos();
+
+    if (this.nivelActual === this.niveles.length - 1) {
+      this.cambiarAMusicaBoss();
     }
+
+    console.log(`Nivel cambiado a ${this.nivelActual}`);
+    console.log(`Nuevos límites: ${nuevosLimites.izquierdo} - ${nuevosLimites.derecho}`);
+
+    // Fade in
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+      this.enTransicion = false; // ✅ Permite de nuevo el cambio de nivel
+    }, 600);
   }
+}
+
+
 
   crearEnemigos() {
     const sueloY = this.niveles[this.nivelActual].sueloY;
@@ -543,7 +562,7 @@ atacar() {
   const altoFrame = 64;
   let frameActual = 0;
 
-  const frameDuration = 30; // ms, baja a 20 para animar más rápido
+  const frameDuration = 25; // ms, baja a 20 para animar más rápido
 
   const animarAtaque = setInterval(() => {
     if (frameActual >= totalFrames) {
@@ -673,7 +692,7 @@ class Enemigo {
     this.rangoDeteccion = 200; // Aumentado proporcionalmente
     this.rangoAtaque = 130;    // Aumentado proporcionalmente
     this.vida = 100;
-    this.dañoAtaque = 8;
+    this.dañoAtaque = 5;
     this.tiempoUltimoAtaque = 0;
     this.cooldownAtaque = 2000;
 
@@ -971,7 +990,7 @@ class Boss extends Enemigo {
     this.sonidoMuerteBoss.volume = 0.2;
     this.musicaBoss = new Audio("./assets/sounds/blasphemous2.m4a");
     this.musicaBoss.loop = true;
-    this.musicaBoss.volume = 0.7;
+    this.musicaBoss.volume = 0.3;
     this.musicaBoss.play().catch(e => console.log("No se pudo reproducir música automáticamente:", e));
 
     this.preloadImages()
@@ -1243,11 +1262,9 @@ const juego = new Game();
 // Iniciar música tras presionar una flecha
 document.addEventListener("keydown", (event) => {
   const teclasFlecha = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
-
   if (teclasFlecha.includes(event.key)) {
     juego.iniciarMusica();
-    // Evitamos que se vuelva a ejecutar
-    document.removeEventListener("keydown", arguments.callee);
   }
-});
+}, { once: true });
+
 

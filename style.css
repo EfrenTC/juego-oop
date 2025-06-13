@@ -18,17 +18,56 @@ body {
 #game-container {
   position: relative;
   width: 95vw;
-  max-width: 1600px; /* más grande que antes */
-  aspect-ratio: 16 / 7; /* más estirado horizontalmente */
+  max-width: 1600px;
+  aspect-ratio: 16 / 7;
   background-image: url('./assets/backgrounds/Background1.png');
   background-size: cover;
   background-position: center;
-  border: 8px solid #6d6d6d;  
-  border-radius: 20px;
   overflow: hidden;
   touch-action: none;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+  image-rendering: pixelated;
+
+  /* Borde tipo marco gótico/pixelado */
+  outline: 4px solid #3a0e06;              /* borde principal oscuro */
+  outline-offset: -4px;
+
+  box-shadow:
+    0 0 0 2px #6e1c13,                     /* borde interior rojo oscuro */
+    0 0 0 4px #1a0503,                     /* borde negro interno */
+    0 0 15px 2px rgba(180, 40, 30, 0.4),   /* glow cálido rojo */
+    inset 0 0 6px rgba(255, 180, 140, 0.1);/* luz interna sutil */
+
+  border-radius: 0; /* sin redondeos para un estilo pixelado/rígido */
 }
+
+
+
+
+
+/* Logo posicionado encima */
+#game-logo {
+  position: absolute;
+  top: 0;              /* pegado justo arriba */
+  left: 50%;           /* centrado horizontalmente */
+  transform: translateX(-50%);
+  width: 400px;        /* más ancho */
+  height: auto;        /* altura automática para respetar proporción */
+  z-index: 10;
+  pointer-events: none;
+}
+
+#fade-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: black;
+  opacity: 0;
+  transition: opacity 1s ease;
+  z-index: 9999; /* encima de todo */
+  pointer-events: none;
+}
+
+
+
 /* Personaje */
 .personaje {
   position: absolute;
@@ -74,19 +113,40 @@ body {
   top: 200px;
   left: 9%;
   width: 200px;
-  height: 20px;
-  background-color: rgba(0, 0, 0, 0.3);
-  border: 2px solid #fff;
-  border-radius: 10px;
+  height: 24px;
+  background: linear-gradient(135deg, #2c1b12, #0e0603);
+  border: 3px solid #5a2a1d;
+  border-radius: 0; /* sin redondeos */
+  box-shadow: none; /* eliminamos sombras difusas */
   z-index: 1000;
+  overflow: hidden;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges; /* para compatibilidad */
+  /* Añadimos un borde pixelado “en escalones” con outline para simular pixel art */
+  outline: 3px solid #5a2a1d;
+  outline-offset: -3px;
 }
 
 .barra-vida {
   height: 100%;
-  background-color: #4CAF50;
-  border-radius: 8px;
-  transition: width 0.3s ease, background-color 0.3s ease;
+  width: 100%;
+  background-image: repeating-linear-gradient(
+    45deg,
+    #ff4433 0,
+    #ff4433 2px,
+    #a12a1a 2px,
+    #a12a1a 4px
+  );
+  background-size: 8px 8px;
+  border-radius: 0;
+  box-shadow: none;
+  transition: width 0.4s ease, background-color 0.4s ease;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  /* Para que la barra no tenga bordes suaves, la dejamos cuadrada */
 }
+
+
 
 /* Efectos de daño para el personaje */
 .personaje.dañado {
