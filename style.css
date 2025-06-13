@@ -251,6 +251,76 @@ body {
   transform-origin: center bottom; /* Importante para que gire desde el centro-abajo */
 }
 
+/* Modal oculto por defecto */
+.modal.oculto {
+  display: none;
+}
+
+/* Modal visible, pantalla completa con fondo semi-transparente */
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;  /* arriba */
+  padding: 20px;             /* padding normal para lados */
+  z-index: 1000;
+  image-rendering: pixelated;
+}
+
+.modal-contenido {
+  background-color: #111;
+  outline: 4px solid #3a0e06;
+  outline-offset: -4px;
+  box-shadow:
+    0 0 0 2px #6e1c13,
+    0 0 0 4px #1a0503,
+    0 0 15px 2px rgba(180, 40, 30, 0.4),
+    inset 0 0 6px rgba(255, 180, 140, 0.1);
+  padding: 20px 30px;
+  text-align: center;
+  color: white;
+  font-family: 'Arial', sans-serif;
+  border-radius: 0;
+  user-select: none;
+  image-rendering: pixelated;
+
+  margin-top: 450px; /* ¡aquí está el "bajar" el modal! */
+}
+
+
+.modal-contenido button {
+  margin-top: 12px;  /* menos margen para el botón */
+  padding: 10px 25px;
+  font-size: 1.1rem;
+  font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace;
+  background-color: #6e1c13;
+  color: white;
+  border: none;
+  outline: 2px solid #3a0e06;
+  outline-offset: -2px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 0;
+  image-rendering: pixelated;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  box-shadow:
+    0 0 0 1px #1a0503,
+    0 0 6px 1px rgba(180, 40, 30, 0.5);
+}
+
+.modal-contenido button:hover {
+  background-color: #a52a2a;
+  box-shadow:
+    0 0 0 1px #1a0503,
+    0 0 8px 3px rgba(255, 100, 60, 0.8);
+}
+
+
+
 
 
 

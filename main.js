@@ -1178,46 +1178,66 @@ class Boss extends Enemigo {
     }
   }
 
-  morir() {
-    if (this.estado === 'muerto') return;
+morir() {
+  if (this.estado === 'muerto') return;
 
-    this.estado = 'muerto';
-    this.atacando = false;
+  this.estado = 'muerto';
+  this.atacando = false;
 
-    this.limpiarAnimaciones();
-    this.musicaBoss.pause();
+  this.limpiarAnimaciones();
+  this.musicaBoss.pause();
 
-    this.sonidoMuerteBoss.currentTime = 0;
-    this.sonidoMuerteBoss.play().catch(e => console.log("No se pudo reproducir sonido de muerte:", e));
+  this.sonidoMuerteBoss.currentTime = 0;
+  this.sonidoMuerteBoss.play().catch(e => console.log("No se pudo reproducir sonido de muerte:", e));
 
-    console.log("Boss: iniciando animación de muerte");
+  console.log("Boss: iniciando animación de muerte");
 
-    let frame = 1;
-    const deathFrames = 10;
-    const duracionFrame = 200;
+  let frame = 1;
+  const deathFrames = 10;
+  const duracionFrame = 200;
 
-    const animarMuerte = () => {
-      if (frame > deathFrames) {
-        if (this.element.parentNode) {
-          this.element.parentNode.removeChild(this.element);
-        }
-        console.log("Boss derrotado, ¡has ganado el juego!");
+  const animarMuerte = () => {
+    if (frame > deathFrames) {
+      if (this.element.parentNode) {
+        this.element.parentNode.removeChild(this.element);
+      }
+      console.log("Boss derrotado, ¡has ganado el juego!");
 
-        const mensaje = document.getElementById("mensaje-victoria");
-        if (mensaje) {
-          mensaje.classList.remove("oculto");
-          mensaje.classList.add("mostrar");
-        }
-        return;
+      const mensaje = document.getElementById("mensaje-victoria");
+      if (mensaje) {
+        mensaje.classList.remove("oculto");
+        mensaje.classList.add("mostrar");
       }
 
-      this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Death/Bringer-of-Death_Death_${frame}.png')`;
-      frame++;
-      setTimeout(animarMuerte, duracionFrame);
-    };
+      // Mostrar modal tras 5 segundos
+      setTimeout(() => {
+        const modal = document.getElementById("modal-victoria");
+        if (modal) {
+          modal.classList.remove("oculto");
 
-    animarMuerte();
-  }
+          // Botón reiniciar
+          const btnReiniciar = document.getElementById("btn-reiniciar");
+          btnReiniciar.onclick = () => {
+            // Opción 1: recargar la página
+            window.location.reload();
+
+            // Opción 2: llamar a un método para reiniciar variables y estado
+            // this.reiniciarJuego();
+          };
+        }
+      }, 5000);
+
+      return;
+    }
+
+    this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Death/Bringer-of-Death_Death_${frame}.png')`;
+    frame++;
+    setTimeout(animarMuerte, duracionFrame);
+  };
+
+  animarMuerte();
+}
+
 
   actualizarPosicion() {
     this.element.style.left = `${this.x}px`;
