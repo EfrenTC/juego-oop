@@ -153,28 +153,28 @@ class Game {
 
 
 
-loopJuego() {
-  this.enemigos.forEach((enemigo, index) => {
-    if (enemigo.vida > 0) {
-      enemigo.update();
+  loopJuego() {
+    this.enemigos.forEach((enemigo, index) => {
+      if (enemigo.vida > 0) {
+        enemigo.update();
 
-      if (enemigo.verificarColision && enemigo.verificarColision(this.personaje) && !this.personaje.invulnerable) {
-        console.log("¡Enemigo toca al jugador!");
-        // Aquí podrías hacer daño al jugador o reacción
-        this.personaje.recibirDaño(enemigo.dañoAtaque || 1);
+        if (enemigo.verificarColision && enemigo.verificarColision(this.personaje) && !this.personaje.invulnerable) {
+          console.log("¡Enemigo toca al jugador!");
+          // Aquí podrías hacer daño al jugador o reacción
+          this.personaje.recibirDaño(enemigo.dañoAtaque || 1);
+        }
+
+      } else {
+        // Si el enemigo tiene método morir, ejecútalo antes de eliminarlo
+        if (enemigo.morir) {
+          enemigo.morir();
+        }
+        this.enemigos.splice(index, 1);
       }
+    });
 
-    } else {
-      // Si el enemigo tiene método morir, ejecútalo antes de eliminarlo
-      if (enemigo.morir) {
-        enemigo.morir();
-      }
-      this.enemigos.splice(index, 1);
-    }
-  });
-
-  requestAnimationFrame(() => this.loopJuego());
-}
+    requestAnimationFrame(() => this.loopJuego());
+  }
 
 
   procesarAtaqueJugador() {
@@ -198,7 +198,7 @@ loopJuego() {
         enemigo.recibirDaño(this.personaje.dañoAtaque);
         console.log(`¡Golpe exitoso! Vida enemigo: ${enemigo.vida}`);
 
-        const fuerzaEmpuje = 30;
+        const fuerzaEmpuje = 10;
 
         // Evitar empujar al boss
         if (!(enemigo instanceof Boss)) {
@@ -252,7 +252,7 @@ class Personaje {
     this.y = this.posicionInicialY;
     this.width = 100;
     this.height = 100;
-    this.velocidad = 40;
+    this.velocidad = 15;
     this.saltando = false;
     this.direccion = 1;
     this.animando = false;
@@ -271,7 +271,7 @@ class Personaje {
     // Sistema de vida y combate
     this.vida = 100;
     this.vidaMaxima = 100;
-    this.dañoAtaque = 50;
+    this.dañoAtaque = 20;
     this.invulnerable = false;
     this.tiempoInvulnerabilidad = 1000; // 1 segundo
 
@@ -414,23 +414,19 @@ class Personaje {
 
   atacar() {
     if (this.atacando || this.saltando) return;
-
     this.atacando = true;
     this.moviendo = false;
-
     this.element.classList.remove("animar-caminar");
     this.element.style.backgroundImage = "url('./assets/Attacks.png')";
-    this.element.classList.add("animar-atacar");
+    this.element.classList.add("atacando", "animar-atacar"); // Añadir clase 'atacando'
 
     const ataqueAudio = new Audio('./assets/sounds/AtaqueEspada1.ogg');
     ataqueAudio.play();
 
-    // Retornar true para indicar que está atacando (para el sistema de combate)
     setTimeout(() => {
       this.atacando = false;
-      this.element.classList.remove("animar-atacar");
+      this.element.classList.remove("animar-atacar", "atacando"); // Quitar ambas clases
 
-      // Volver a sprite adecuado
       if (this.saltando) {
         this.element.style.backgroundImage = "url('./assets/Jump.png')";
       } else if (this.moviendo) {
@@ -441,20 +437,19 @@ class Personaje {
       }
     }, 400);
 
-    return true; // Indica que el ataque se ejecutó
+    return true;
   }
 
   recibirDaño(cantidad) {
     if (this.invulnerable || this.vida <= 0) return;
 
     this.vida -= cantidad;
-    this.vida = Math.max(0, this.vida); // No bajar de 0
+    this.vida = Math.max(0, this.vida);
 
     console.log(`¡Jugador recibe ${cantidad} de daño! Vida restante: ${this.vida}`);
 
-    // Efecto visual de daño
-    this.element.style.filter = 'brightness(2) hue-rotate(0deg)';
-    this.element.classList.add('dañado');
+    // Solo brillo simple sin hue-rotate ni clase 'dañado'
+    this.element.style.filter = 'brightness(2)';
 
     // Período de invulnerabilidad
     this.invulnerable = true;
@@ -462,18 +457,18 @@ class Personaje {
 
     setTimeout(() => {
       this.element.style.filter = 'brightness(1)';
-      this.element.classList.remove('dañado');
+      // No quitamos clase 'dañado' porque no la añadimos
       this.element.style.opacity = '1';
       this.invulnerable = false;
     }, this.tiempoInvulnerabilidad);
 
     this.actualizarBarraVida();
 
-    // Verificar muerte
     if (this.vida <= 0) {
       this.morir();
     }
   }
+
 
   curar(cantidad) {
     this.vida += cantidad;
@@ -482,19 +477,19 @@ class Personaje {
     console.log(`¡Jugador se cura ${cantidad} puntos! Vida actual: ${this.vida}`);
   }
 
- morir() {
-  console.log('¡Game Over!');
-  this.element.style.filter = 'grayscale(1) brightness(0.5)';
+  morir() {
+    console.log('¡Game Over!');
+    this.element.style.filter = 'grayscale(1) brightness(0.5)';
 
-  // Reproducir sonido de muerte
-  this.sonidoMuerte.currentTime = 0;
-  this.sonidoMuerte.play();
+    // Reproducir sonido de muerte
+    this.sonidoMuerte.currentTime = 0;
+    this.sonidoMuerte.play();
 
-  setTimeout(() => {
-    alert('¡Has muerto! Reiniciando...');
-    this.reiniciar();
-  }, 1000);
-}
+    setTimeout(() => {
+      alert('¡Has muerto! Reiniciando...');
+      this.reiniciar();
+    }, 1000);
+  }
 
 
   reiniciar() {
@@ -555,6 +550,7 @@ class Enemigo {
     this.actualizarPosicion();
     this.element.style.transform = `scaleX(${this.direccion})`;
     this.sonidoAtaque = new Audio('./assets/sounds/Enemigo.ogg');
+    this.sonidoMuerte = new Audio('./assets/sounds/EnemyDie.ogg')
 
     // Estado para controlar animaciones
     this.atacando = false;
@@ -647,9 +643,9 @@ class Enemigo {
       this.realizarAtaque();
       this.tiempoUltimoAtaque = tiempoActual;
 
-   
-this.sonidoAtaque.currentTime = 0;
-    this.sonidoAtaque.play();
+
+      this.sonidoAtaque.currentTime = 0;
+      this.sonidoAtaque.play();
 
 
       setTimeout(() => {
@@ -699,12 +695,15 @@ this.sonidoAtaque.currentTime = 0;
     this.estado = 'muerto'; // Evita que siga atacando o patrullando
     this.iniciarAnimacionMuerte();
 
+    this.sonidoMuerte.currentTime = 0;
+    this.sonidoMuerte.play();
+
     // Eliminar al enemigo tras la animación
     setTimeout(() => {
       if (this.element.parentNode) {
         this.element.parentNode.removeChild(this.element);
       }
-    }, 1000); // Ajusta el tiempo si la animación dura más o menos
+    }, 800); // Ajusta el tiempo si la animación dura más o menos
   }
 
 
@@ -747,15 +746,15 @@ this.sonidoAtaque.currentTime = 0;
     this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Idle.png')";
   }
 
- iniciarAnimacionAtacar() {
-  this.element.classList.add("animar-atacar");
-  this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Attack1.png')";
-}
+  iniciarAnimacionAtacar() {
+    this.element.classList.add("animar-atacar");
+    this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Attack1.png')";
+  }
 
-detenerAnimacionAtacar() {
-  this.element.classList.remove("animar-atacar");
-  this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Idle.png')";
-}
+  detenerAnimacionAtacar() {
+    this.element.classList.remove("animar-atacar");
+    this.element.style.backgroundImage = "url('./assets/enemy/Sprites/Idle.png')";
+  }
 
 
   detenerAnimacionAtacar() {
@@ -788,10 +787,10 @@ class Boss extends Enemigo {
     this.width = 500;
     this.height = 700;
 
-    this.vida = 1000;
+    this.vida = 300;
     this.dañoAtaque = 5;
-    this.velocidad = 0;
-    this.rangoDeteccion = 0;
+    this.velocidad = 0.5;
+    this.rangoDeteccion = 600;
     this.rangoAtaque = 150;
     this.cooldownAtaque = 2000;
     this.tiempoUltimoAtaque = 0;
@@ -800,14 +799,20 @@ class Boss extends Enemigo {
     this.atacando = false;
 
     this.idleFrames = 8;
+    this.walkFrames = 8;
     this.attackFrames = 10;
+
     this.currentIdleFrame = 1;
+    this.currentWalkFrame = 1;
+
     this.idleAnimationSpeed = 150;
+    this.walkAnimationSpeed = 120;
+
     this.idleInterval = null;
+    this.walkInterval = null;
 
     this.element.classList.remove('enemigo');
     this.element.classList.add('boss');
-   
 
     this.element.style.width = `${this.width}px`;
     this.element.style.height = `${this.height}px`;
@@ -865,14 +870,15 @@ class Boss extends Enemigo {
       promesas.push(loadImage(`./assets/Boss/Individual Sprite/Death/Bringer-of-Death_Death_${i}.png`));
     }
 
+    for (let i = 1; i <= this.walkFrames; i++) {
+      promesas.push(loadImage(`./assets/Boss/Individual Sprite/Walk/Bringer-of-Death_Walk_${i}.png`));
+    }
+
     await Promise.all(promesas);
   }
 
   iniciarAnimacionIdle() {
-    if (this.idleInterval) {
-      clearInterval(this.idleInterval);
-      this.idleInterval = null;
-    }
+    this.limpiarAnimaciones();
 
     if (this.estado !== 'vivo' || this.atacando) return;
 
@@ -881,8 +887,7 @@ class Boss extends Enemigo {
 
     this.idleInterval = setInterval(() => {
       if (this.estado !== 'vivo' || this.atacando) {
-        clearInterval(this.idleInterval);
-        this.idleInterval = null;
+        this.limpiarAnimaciones();
         return;
       }
       this.currentIdleFrame = (this.currentIdleFrame % this.idleFrames) + 1;
@@ -890,7 +895,33 @@ class Boss extends Enemigo {
     }, this.idleAnimationSpeed);
   }
 
+  iniciarAnimacionCaminata() {
+    this.limpiarAnimaciones();
+
+    this.currentWalkFrame = 1;
+    this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Walk/Bringer-of-Death_Walk_${this.currentWalkFrame}.png')`;
+
+    this.walkInterval = setInterval(() => {
+      if (this.estado !== 'vivo' || this.atacando) {
+        this.limpiarAnimaciones();
+        return;
+      }
+      this.currentWalkFrame = (this.currentWalkFrame % this.walkFrames) + 1;
+      this.element.style.backgroundImage = `url('./assets/Boss/Individual Sprite/Walk/Bringer-of-Death_Walk_${this.currentWalkFrame}.png')`;
+    }, this.walkAnimationSpeed);
+  }
+
+  limpiarAnimaciones() {
+    clearInterval(this.idleInterval);
+    clearInterval(this.walkInterval);
+    this.idleInterval = null;
+    this.walkInterval = null;
+  }
+
   verificarColision(jugador) {
+    // Si el boss no está atacando, no hay colisión peligrosa
+    if (!this.atacando) return false;
+
     const jugadorRect = {
       x: jugador.x,
       y: jugador.y,
@@ -898,38 +929,55 @@ class Boss extends Enemigo {
       height: jugador.height || 64,
     };
 
-    const bossRect = {
-      x: this.x,
-      y: this.y,
-      width: this.width,
-      height: this.height,
+    const hitboxMarginX = 100; // más estrecho pero no tanto
+    const hitboxHeight = 180;  // altura visible del cuerpo del boss
+    const hitboxY = this.y + this.height - hitboxHeight; // parte baja del boss
+
+    const bossHitbox = {
+      x: this.x + hitboxMarginX,
+      y: hitboxY,
+      width: this.width - hitboxMarginX * 2,
+      height: hitboxHeight,
     };
 
-    return (
-      jugadorRect.x < bossRect.x + bossRect.width &&
-      jugadorRect.x + jugadorRect.width > bossRect.x &&
-      jugadorRect.y < bossRect.y + bossRect.height &&
-      jugadorRect.y + jugadorRect.height > bossRect.y
+    const colision = (
+      jugadorRect.x < bossHitbox.x + bossHitbox.width &&
+      jugadorRect.x + jugadorRect.width > bossHitbox.x &&
+      jugadorRect.y < bossHitbox.y + bossHitbox.height &&
+      jugadorRect.y + jugadorRect.height > bossHitbox.y
     );
+
+    console.log("Colisión jugador-boss:", colision, jugadorRect, bossHitbox);
+    return colision;
   }
-update() {
-  if (this.estado === 'muerto') return;
-
-  const jugadorCentroX = this.jugador.x + (this.jugador.width || 64) / 2;
-  const bossCentroX = this.x + this.width / 2;
-
-  // Flip del boss para que mire al jugador
-this.element.style.transform = jugadorCentroX < bossCentroX ? "scaleX(1)" : "scaleX(-1)";
 
 
-  const enRangoX = Math.abs(jugadorCentroX - bossCentroX) <= this.rangoAtaque;
-  const enRangoY = Math.abs(this.jugador.y - this.y) < this.height;
 
-  if (enRangoX && enRangoY) {
-    this.atacar();
+
+  update() {
+    if (this.estado === 'muerto') return;
+
+    const jugadorCentroX = this.jugador.x + (this.jugador.width || 64) / 2;
+    const bossCentroX = this.x + this.width / 2;
+
+    this.element.style.transform = jugadorCentroX < bossCentroX ? "scaleX(1)" : "scaleX(-1)";
+
+    const distanciaX = jugadorCentroX - bossCentroX;
+    const distanciaY = Math.abs(this.jugador.y - this.y);
+    const enRangoX = Math.abs(distanciaX) <= this.rangoAtaque;
+    const enRangoY = distanciaY < this.height;
+
+    if (enRangoX && enRangoY) {
+      this.atacar();
+    } else if (Math.abs(distanciaX) <= this.rangoDeteccion) {
+      // Moverse hacia el jugador
+      this.x += distanciaX > 0 ? this.velocidad : -this.velocidad;
+      this.actualizarPosicion();
+      if (!this.walkInterval) this.iniciarAnimacionCaminata();
+    } else {
+      if (!this.idleInterval) this.iniciarAnimacionIdle();
+    }
   }
-}
-
 
   atacar() {
     if (this.atacando || this.estado === 'muerto') return;
@@ -940,8 +988,7 @@ this.element.style.transform = jugadorCentroX < bossCentroX ? "scaleX(1)" : "sca
     this.atacando = true;
     this.tiempoUltimoAtaque = ahora;
 
-    clearInterval(this.idleInterval);
-    this.idleInterval = null;
+    this.limpiarAnimaciones();
 
     let frame = 1;
     const duracionFrame = 100;
@@ -981,8 +1028,7 @@ this.element.style.transform = jugadorCentroX < bossCentroX ? "scaleX(1)" : "sca
     this.estado = 'muerto';
     this.atacando = false;
 
-    clearInterval(this.idleInterval);
-    this.idleInterval = null;
+    this.limpiarAnimaciones();
     this.musicaBoss.pause();
 
     this.sonidoMuerteBoss.currentTime = 0;
@@ -1033,6 +1079,7 @@ this.element.style.transform = jugadorCentroX < bossCentroX ? "scaleX(1)" : "sca
 
 
 
+
 class Moneda {
   constructor() {
     this.x = Math.random() * 700 + 50;
@@ -1050,6 +1097,68 @@ class Moneda {
     this.element.style.top = `${this.y}px`;
   }
 }
+
+class LimitesJuego {
+  constructor(gameContainer) {
+    this.container = gameContainer;
+    this.updateLimites();
+
+    // Actualizar límites cuando cambie el tamaño de ventana
+    window.addEventListener('resize', () => this.updateLimites());
+  }
+
+  updateLimites() {
+    const rect = this.container.getBoundingClientRect();
+    this.limites = {
+      izquierda: 0,
+      derecha: this.container.offsetWidth,
+      arriba: 0,
+      abajo: this.container.offsetHeight
+    };
+  }
+
+  // Verificar si una entidad está dentro de los límites
+  verificarLimites(entidad) {
+    const bounds = {
+      izquierda: entidad.x,
+      derecha: entidad.x + entidad.width,
+      arriba: entidad.y,
+      abajo: entidad.y + entidad.height
+    };
+
+    return {
+      dentro: bounds.izquierda >= this.limites.izquierda &&
+        bounds.derecha <= this.limites.derecha &&
+        bounds.arriba >= this.limites.arriba &&
+        bounds.abajo <= this.limites.abajo,
+      colisionIzquierda: bounds.izquierda < this.limites.izquierda,
+      colisionDerecha: bounds.derecha > this.limites.derecha,
+      colisionArriba: bounds.arriba < this.limites.arriba,
+      colisionAbajo: bounds.abajo > this.limites.abajo
+    };
+  }
+
+  // Ajustar posición dentro de los límites
+  ajustarPosicion(entidad) {
+    const verificacion = this.verificarLimites(entidad);
+
+    if (verificacion.colisionIzquierda) {
+      entidad.x = this.limites.izquierda;
+    }
+    if (verificacion.colisionDerecha) {
+      entidad.x = this.limites.derecha - entidad.width;
+    }
+    if (verificacion.colisionArriba) {
+      entidad.y = this.limites.arriba;
+    }
+    if (verificacion.colisionAbajo) {
+      entidad.y = this.limites.abajo - entidad.height;
+    }
+
+    return verificacion;
+  }
+}
+
 
 
 

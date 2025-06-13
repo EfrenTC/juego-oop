@@ -39,22 +39,18 @@ body {
   transition: none;
 }
 
-/* Animación caminar */
-/* @keyframes caminar {
-  from { background-position: 0 0; }
-  to { background-position: -512px 0; } 
-}
-.animar-caminar {
-  animation: caminar 0.5s steps(4) infinite;
-} */
 
-/* Animación atacar */
 @keyframes atacar {
   from { background-position: 0 0; }
-  to { background-position: -512px 0; } /* ajusta según el ancho total del sprite Attacks.png */
+  to { background-position: -640px 0; } /* Ajusta según el ancho real del sprite */
 }
+
 .animar-atacar {
   animation: atacar 0.4s steps(4) forwards;
+}
+
+.personaje.atacando {
+  width: 200px; /* Ajusta este valor según tu sprite de ataque */
 }
 
 
