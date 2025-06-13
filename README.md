@@ -1,9 +1,43 @@
-Considerar cambiar los sprites de muerte y ataque por animaciones, se ven toscas a 2 fps, las animaciones se ven mas fluidas
-Botones pausa
-Añadir mas escenarios
-Sistema puntuacion
-Cada pantalla los enemigos te quitan mas vida
-O si no que como no te puedes curar, y pasar pantallas hasta morir, record de nivel mas lejano (cada vez que se pasa de pantalla los enemigos tienen mas vida y pegan mas)
+# ⚔️ Juego 2D estilo Castlevania - Inspirado en Blasphemous
 
-suelos, olvidar escaleras, recortar escaleras
-al caer vuelve al y dl primer nivel
+**Desarrollado por Efrén Tomás** utilizando **HTML, CSS y JavaScript**.
+
+---
+
+## 🎮 Descripción
+
+Este es un videojuego 2D de estilo *Castlevania*, inspirado en títulos como **Blasphemous**.
+Combina combate cuerpo a cuerpo y una ambientación oscura pixel art.
+
+Cuenta con:
+
+- 5 niveles distintos con enemigos progresivamente más difíciles.
+- Enemigos con inteligencia artificial básica.
+- Un **jefe final (Boss)** con animaciones propias y comportamiento más complejo según sus sprites.
+- Sistema de vida, colisiones, animaciones, sonidos y HUD integrado.
+- Diseño modular basado en programación orientada a objetos (POO).
+
+---
+
+## 🧠 Arquitectura del juego
+
+El juego está dividido en varias clases principales:
+
+- `Game`: controla el flujo del juego y genera los niveles.
+- `Personaje`: gestiona al jugador, sus movimientos, ataques y vida.
+- `Enemigo`: enemigos con IA que patrullan, persiguen y atacan.
+- `Boss`: jefe final con lógica avanzada, música de combate y animaciones personalizadas.
+
+---
+
+## 🚀 Cómo jugar
+
+1. Clona el repositorio:
+   ```bash
+   git clone https://github.com/tuusuario/tu-repo.git
+
+
+2. Desde:
+     https://efrentc.github.io/juego-oop/
+
+ 
