@@ -8,13 +8,13 @@ class Game {
     this.enemigos = [];
     this.puntuacion = 0;
 
-    // ✨ Estructura ampliada con límites específicos para cada nivel
+    //  Estructura ampliada con límites específicos para cada nivel
     this.niveles = [
       { 
         fondo: "./assets/backgrounds/Background1.png", 
         sueloY: 590,
         limiteIzquierdo: 20,
-        limiteDerecho: 1200  // Ajusta según tu fondo
+        limiteDerecho: 1200 
       },
       { 
         fondo: "./assets/backgrounds/Background2.png", 
@@ -44,7 +44,7 @@ class Game {
         fondo: "./assets/backgrounds/Background6.png", 
         sueloY: 635,
         limiteIzquierdo: 100,
-        limiteDerecho: 1400  // Boss level - área más pequeña
+        limiteDerecho: 1400  
       },
     ];
 
@@ -77,7 +77,7 @@ class Game {
     this.audioBoss.play().catch(err => console.warn("Error al reproducir música del boss:", err));
   }
 
-  // ✨ Método para obtener los límites del nivel actual
+  // Método para obtener los límites del nivel actual
   getLimitesNivel() {
     const nivel = this.niveles[this.nivelActual];
     return {
@@ -86,7 +86,7 @@ class Game {
     };
   }
 
-  // ✨ Método para validar si una posición X está dentro de los límites
+  //  Método para validar si una posición X está dentro de los límites
   validarPosicionX(x, anchoPersonaje = 0) {
     const limites = this.getLimitesNivel();
     const posicionIzquierda = x;
@@ -102,7 +102,7 @@ class Game {
     this.personaje.posicionInicialY = nivel.sueloY;
     this.personaje.y = nivel.sueloY;
     
-    // ✨ Ajustar posición inicial del personaje dentro de los límites
+    // Ajustar posición inicial del personaje dentro de los límites
     const limites = this.getLimitesNivel();
     this.personaje.x = Math.max(limites.izquierdo, Math.min(this.personaje.x, limites.derecho - this.personaje.element.offsetWidth));
     
@@ -111,7 +111,7 @@ class Game {
     // Crear monedas dentro de los límites
     for (let i = 0; i < 5; i++) {
       const moneda = new Moneda();
-      // ✨ Posicionar monedas dentro de los límites del nivel
+      //  Posicionar monedas dentro de los límites del nivel
       const limites = this.getLimitesNivel();
       moneda.x = limites.izquierdo + Math.random() * (limites.derecho - limites.izquierdo - 50);
       this.monedas.push(moneda);
@@ -127,7 +127,7 @@ class Game {
           this.procesarAtaqueJugador();
         }
       } else {
-        // ✨ Pasar los límites al método de movimiento
+        // Pasar los límites al método de movimiento
         const limites = this.getLimitesNivel();
         this.personaje.mover(e, limites);
         this.verificarCambioNivel();
@@ -150,7 +150,7 @@ async verificarCambioNivel() {
   const limites = this.getLimitesNivel();
 
   if (personajeRight >= limites.derecho && this.nivelActual < this.niveles.length - 1) {
-    this.enTransicion = true; // ⚠️ Bloquea futuros cambios hasta que termine
+    this.enTransicion = true; // Bloquea futuros cambios hasta que termine
 
     const overlay = document.getElementById('fade-overlay');
 
@@ -182,7 +182,7 @@ async verificarCambioNivel() {
     // Fade in
     overlay.style.opacity = '0';
     setTimeout(() => {
-      this.enTransicion = false; // ✅ Permite de nuevo el cambio de nivel
+      this.enTransicion = false; // Permite de nuevo el cambio de nivel
     }, 600);
   }
 }
@@ -198,7 +198,7 @@ async verificarCambioNivel() {
     this.enemigos = [];
 
     if (this.nivelActual === 5) {
-      // ✨ Crear boss dentro de los límites del nivel
+      // Crear boss dentro de los límites del nivel
       const areaDisponible = limites.derecho - limites.izquierdo;
       const bossX = limites.izquierdo + (areaDisponible / 2) - 125; // Centrar boss (asumiendo 250px de ancho)
       const boss = new Boss(bossX, sueloY, this.personaje);
@@ -213,7 +213,7 @@ async verificarCambioNivel() {
       return;
     }
 
-    // ✨ Para los demás niveles, generar enemigos dentro de los límites
+    // Para los demás niveles, generar enemigos dentro de los límites
     const cantidadEnemigos = 1 + this.nivelActual;
     const areaDisponible = limites.derecho - limites.izquierdo - 100; // Margen de seguridad
 
@@ -236,7 +236,7 @@ async verificarCambioNivel() {
   loopJuego() {
     this.enemigos.forEach((enemigo, index) => {
       if (enemigo.vida > 0) {
-        // ✨ Pasar límites a los enemigos para que respeten bordes
+        // Pasar límites a los enemigos para que respeten bordes
         const limites = this.getLimitesNivel();
         if (enemigo.update) {
           enemigo.update(limites); // Algunos enemigos pueden necesitar conocer los límites
@@ -281,7 +281,7 @@ async verificarCambioNivel() {
 
         const fuerzaEmpuje = 10;
 
-        // ✨ Aplicar empuje respetando límites del nivel
+        //  Aplicar empuje respetando límites del nivel
         if (!(enemigo instanceof Boss)) {
           const nuevaX = enemigo.x + (this.personaje.direccion * fuerzaEmpuje);
           const limites = this.getLimitesNivel();
@@ -404,7 +404,7 @@ mover(evento, limites = null) {
   let movimiento = false;
 
   if (evento.key === "ArrowRight") {
-    // ✨ Verificar límite derecho antes de mover
+    // Verificar límite derecho antes de mover
     const nuevaX = this.x + this.velocidad;
     const anchoPersonaje = this.element.offsetWidth || 50;
     
@@ -424,7 +424,7 @@ mover(evento, limites = null) {
     }
 
   } else if (evento.key === "ArrowLeft") {
-    // ✨ Verificar límite izquierdo antes de mover
+    // Verificar límite izquierdo antes de mover
     const nuevaX = this.x - this.velocidad;
     
     if (!limites || (nuevaX >= limites.izquierdo)) {
@@ -455,7 +455,7 @@ mover(evento, limites = null) {
   this.actualizarPosicion();
 }
 
-// ✨ Método auxiliar para verificar si está en los límites (opcional)
+// Método auxiliar para verificar si está en los límites (opcional)
 estaEnLimites(limites) {
   if (!limites) return true;
   
@@ -463,7 +463,7 @@ estaEnLimites(limites) {
   return this.x >= limites.izquierdo && (this.x + anchoPersonaje) <= limites.derecho;
 }
 
-// ✨ Método para ajustar posición si está fuera de límites (útil para teleports o empujones)
+// Método para ajustar posición si está fuera de límites (útil para teleports o empujones)
 ajustarALimites(limites) {
   if (!limites) return;
   
@@ -680,17 +680,17 @@ atacar() {
 class Enemigo {
   constructor(x, y, jugador) {
     this.x = x;
-    this.width = 384;   // Aumentado de 256 a 384
-    this.height = 480;  // Aumentado de 320 a 480
+    this.width = 384;   
+    this.height = 480;  
 
-    this.y = (typeof y === 'number') ? (y - this.height + 225) : 100; // Ajustado offset
+    this.y = (typeof y === 'number') ? (y - this.height + 225) : 100; 
 
     this.velocidad = 0.3;
     this.direccion = -1;
     this.jugador = jugador;
     this.estado = 'patrullando';
-    this.rangoDeteccion = 200; // Aumentado proporcionalmente
-    this.rangoAtaque = 130;    // Aumentado proporcionalmente
+    this.rangoDeteccion = 200; 
+    this.rangoAtaque = 130;    
     this.vida = 100;
     this.dañoAtaque = 5;
     this.tiempoUltimoAtaque = 0;
@@ -705,7 +705,7 @@ class Enemigo {
     this.element.classList.add("enemigo");
     document.body.appendChild(this.element);
 
-    // ✨ Estado de animación para evitar conflictos
+    // Estado de animación para evitar conflictos
     this.animacionActual = 'idle';
     this.atacando = false;
 
@@ -714,7 +714,7 @@ class Enemigo {
     this.sonidoAtaque = new Audio('./assets/sounds/Enemigo.ogg');
     this.sonidoMuerte = new Audio('./assets/sounds/EnemyDie.ogg');
 
-    // ✨ Inicializar con sprite idle
+    //  Inicializar con sprite idle
     this.cambiarSprite('idle');
   }
 
@@ -723,7 +723,7 @@ class Enemigo {
     this.element.style.top = `${this.y}px`;
   }
 
-  // ✨ Método para cambiar sprites sin conflictos
+  //  Método para cambiar sprites sin conflictos
   cambiarSprite(nuevoSprite) {
     if (this.animacionActual === nuevoSprite) return; // No cambiar si ya está activo
 
@@ -928,7 +928,7 @@ class Enemigo {
     const distancia = Math.abs(this.x - jugador.x);
     const distanciaY = Math.abs(this.y - jugador.y);
     
-    return distancia < 75 && distanciaY < 75; // Aumentado por el tamaño mayor
+    return distancia < 75 && distanciaY < 75; 
   }
 }
 
@@ -990,7 +990,7 @@ class Boss extends Enemigo {
     this.sonidoMuerteBoss.volume = 0.2;
     this.musicaBoss = new Audio("./assets/sounds/blasphemous2.m4a");
     this.musicaBoss.loop = true;
-    this.musicaBoss.volume = 0.3;
+    this.musicaBoss.volume = 0.1;
     this.musicaBoss.play().catch(e => console.log("No se pudo reproducir música automáticamente:", e));
 
     this.preloadImages()
@@ -1218,11 +1218,7 @@ morir() {
           // Botón reiniciar
           const btnReiniciar = document.getElementById("btn-reiniciar");
           btnReiniciar.onclick = () => {
-            // Opción 1: recargar la página
             window.location.reload();
-
-            // Opción 2: llamar a un método para reiniciar variables y estado
-            // this.reiniciarJuego();
           };
         }
       }, 5000);
@@ -1245,17 +1241,6 @@ morir() {
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
 class Moneda {
   constructor() {
     this.x = Math.random() * 700 + 50;
@@ -1274,9 +1259,6 @@ class Moneda {
   }
 }
 
-
-
-
 const juego = new Game();
 
 // Iniciar música tras presionar una flecha
@@ -1286,5 +1268,3 @@ document.addEventListener("keydown", (event) => {
     juego.iniciarMusica();
   }
 }, { once: true });
-
-
