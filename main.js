@@ -58,11 +58,11 @@ class Game {
 
     this.audioFondo = new Audio("./assets/sounds/blasphemous1.m4a");
     this.audioFondo.loop = true;
-    this.audioFondo.volume = 0.3;
+    this.audioFondo.volume = 0.2;
 
     this.audioBoss = new Audio("./assets/sounds/blasphemous2.m4a");
     this.audioBoss.loop = true;
-    this.audioBoss.volume = 0.3;
+    this.audioBoss.volume = 0.2;
   }
 
   iniciarMusica() {
@@ -336,9 +336,9 @@ class Personaje {
 
 
     // Sistema de vida y combate
-    this.vida = 100;
-    this.vidaMaxima = 100;
-    this.dañoAtaque = 20;
+    this.vida = 150;
+    this.vidaMaxima = 150;
+    this.dañoAtaque = 25;
     this.invulnerable = false;
     this.tiempoInvulnerabilidad = 1000; // 1 segundo
 
@@ -525,21 +525,33 @@ ajustarALimites(limites) {
   }
 
 
-  atacar() {
-    if (this.atacando || this.saltando) return;
-    this.atacando = true;
-    this.moviendo = false;
-    this.element.classList.remove("animar-caminar");
-    this.element.style.backgroundImage = "url('./assets/Attacks.png')";
-    this.element.classList.add("atacando", "animar-atacar"); // Añadir clase 'atacando'
+atacar() {
+  if (this.atacando || this.saltando) return;
+  this.atacando = true;
+  this.moviendo = false;
 
-    const ataqueAudio = new Audio('./assets/sounds/AtaqueEspada1.ogg');
-    ataqueAudio.play();
+  this.element.classList.remove("animar-caminar");
+  this.element.style.backgroundImage = "url('./assets/Attacks.png')";
+  this.element.classList.add("atacando");
 
-    setTimeout(() => {
+  const ataqueAudio = new Audio('./assets/sounds/AtaqueEspada1.ogg');
+  ataqueAudio.play();
+
+  const totalFrames = 16; // Solo primeros 16 frames para ataque 1
+  const columnas = 8;
+  const anchoFrame = 128;
+  const altoFrame = 64;
+  let frameActual = 0;
+
+  const frameDuration = 30; // ms, baja a 20 para animar más rápido
+
+  const animarAtaque = setInterval(() => {
+    if (frameActual >= totalFrames) {
+      clearInterval(animarAtaque);
       this.atacando = false;
-      this.element.classList.remove("animar-atacar", "atacando"); // Quitar ambas clases
+      this.element.classList.remove("atacando");
 
+      // Volver al estado correspondiente
       if (this.saltando) {
         this.element.style.backgroundImage = "url('./assets/Jump.png')";
       } else if (this.moviendo) {
@@ -548,10 +560,25 @@ ajustarALimites(limites) {
       } else {
         this.element.style.backgroundImage = "url('./assets/Idle.png')";
       }
-    }, 400);
 
-    return true;
-  }
+      this.element.style.backgroundPosition = '0px 0px'; // Reiniciar por si acaso
+      return;
+    }
+
+    const columna = frameActual % columnas;
+    const fila = Math.floor(frameActual / columnas);
+
+    const posX = -columna * anchoFrame;
+    const posY = -fila * altoFrame;
+
+    this.element.style.backgroundPosition = `${posX}px ${posY}px`;
+
+    frameActual++;
+  }, frameDuration);
+
+  return true;
+}
+
 
   recibirDaño(cantidad) {
     if (this.invulnerable || this.vida <= 0) return;
@@ -898,7 +925,7 @@ class Boss extends Enemigo {
     this.height = 700;
 
     this.vida = 300;
-    this.dañoAtaque = 5;
+    this.dañoAtaque = 3;
     this.velocidad = 0.5;
     this.rangoDeteccion = 600;
     this.rangoAtaque = 150;
