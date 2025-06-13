@@ -1098,68 +1098,6 @@ class Moneda {
   }
 }
 
-class LimitesJuego {
-  constructor(gameContainer) {
-    this.container = gameContainer;
-    this.updateLimites();
-
-    // Actualizar límites cuando cambie el tamaño de ventana
-    window.addEventListener('resize', () => this.updateLimites());
-  }
-
-  updateLimites() {
-    const rect = this.container.getBoundingClientRect();
-    this.limites = {
-      izquierda: 0,
-      derecha: this.container.offsetWidth,
-      arriba: 0,
-      abajo: this.container.offsetHeight
-    };
-  }
-
-  // Verificar si una entidad está dentro de los límites
-  verificarLimites(entidad) {
-    const bounds = {
-      izquierda: entidad.x,
-      derecha: entidad.x + entidad.width,
-      arriba: entidad.y,
-      abajo: entidad.y + entidad.height
-    };
-
-    return {
-      dentro: bounds.izquierda >= this.limites.izquierda &&
-        bounds.derecha <= this.limites.derecha &&
-        bounds.arriba >= this.limites.arriba &&
-        bounds.abajo <= this.limites.abajo,
-      colisionIzquierda: bounds.izquierda < this.limites.izquierda,
-      colisionDerecha: bounds.derecha > this.limites.derecha,
-      colisionArriba: bounds.arriba < this.limites.arriba,
-      colisionAbajo: bounds.abajo > this.limites.abajo
-    };
-  }
-
-  // Ajustar posición dentro de los límites
-  ajustarPosicion(entidad) {
-    const verificacion = this.verificarLimites(entidad);
-
-    if (verificacion.colisionIzquierda) {
-      entidad.x = this.limites.izquierda;
-    }
-    if (verificacion.colisionDerecha) {
-      entidad.x = this.limites.derecha - entidad.width;
-    }
-    if (verificacion.colisionArriba) {
-      entidad.y = this.limites.arriba;
-    }
-    if (verificacion.colisionAbajo) {
-      entidad.y = this.limites.abajo - entidad.height;
-    }
-
-    return verificacion;
-  }
-}
-
-
 
 
 
