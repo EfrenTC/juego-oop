@@ -92,18 +92,63 @@ body {
 /* Enemigos mejorados */
 .enemigo {
   position: absolute;
-  width: 256px;              /* Nueva dimensión más ancha */
-  height: 320px;             /* Nueva dimensión más alta */
+  width: 384px;    /* Aumentado de 256px a 384px (1.5x) */
+  height: 480px;   /* Aumentado de 320px a 480px (1.5x) */
   background-image: url('./assets/enemy/Sprites/Idle.png');
   background-repeat: no-repeat;
-  background-size: 2048px 320px; /* 8 frames * 256px */
+  background-size: 3072px 480px; /* Ajustado: 8 frames * 384px width, 480px height */
   background-position: 0 0;
   image-rendering: pixelated;
   z-index: 2;
   transform-origin: bottom center;
 }
 
+/* ✨ Animación para correr (reemplaza las animaciones de patrullar/perseguir) */
+.animar-run {
+  animation: animar-run 0.6s steps(8) infinite;
+}
 
+@keyframes animar-run {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -3072px 0; /* 384px * 8 frames */
+  }
+}
+
+/* ✨ Animación de ataque */
+.animar-atacar {
+  animation: animar-atacar 0.4s steps(8) forwards;
+  background-size: 3072px 480px; /* Ajustado para el nuevo tamaño */
+}
+
+@keyframes animar-atacar {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -3072px 0; /* 384px * 8 frames */
+  }
+}
+
+/* ✨ Animación de muerte */
+.animar-morir {
+  animation: animar-muerte 1.5s steps(6) forwards;
+  background-repeat: no-repeat;
+  background-size: 2304px 480px; /* 384px * 6 frames, 480px height */
+}
+
+@keyframes animar-muerte {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -2304px 0; /* 384px * 6 frames */
+  }
+}
+
+/* Estados visuales (mantienen los filtros pero sin animaciones conflictivas) */
 .enemigo.patrullando {
   filter: brightness(1);
 }
@@ -116,48 +161,15 @@ body {
   filter: brightness(1.2) contrast(1.1);
 }
 
-
 .enemigo.dañado {
   filter: brightness(2) hue-rotate(0deg) !important;
   animation: shake 0.15s ease-in-out;
 }
 
-
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-2px); }
-  75% { transform: translateX(2px); }
-}
-
-.animar-morir {
-  animation: animar-muerte 1.5s steps(6) forwards;
-  background-repeat: no-repeat;
-  background-size: 1536px 320px; /* 256px * 6 */
-}
-
-
-
-@keyframes animar-muerte {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: -1536px 0; /* ejemplo: 256px * 6 frames */
-  }
-}
-
-@keyframes animar-atacar {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: -2048px 0; /* 256px * 8 frames */
-  }
-}
-
-.animar-atacar {
-  animation: animar-atacar 0.4s steps(8) forwards;
-  background-size: 2048px 320px; /* Tamaño total del spritesheet */
+  25% { transform: translateX(-3px); }  /* Aumentado el shake */
+  75% { transform: translateX(3px); }   /* para enemigos más grandes */
 }
 
 
